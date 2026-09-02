@@ -123,7 +123,7 @@ class ViewerPacketListener(private val plugin: JReiProxyServer) : PluginMessageL
 
     private fun denyCheat(player: Player) {
         plugin.logger.warning("${player.name} tried to use cheat mode without permission.")
-        player.sendMessage(plugin.localeManager.getMessage("cheat.no-permission"))
+        player.sendMessage(plugin.localeManager.component("cheat.no-permission"))
         // Correct the client's idea of its own permission so it stops offering the action.
         sendCheatPermission(player)
     }

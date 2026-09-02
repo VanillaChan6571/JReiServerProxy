@@ -119,7 +119,7 @@ class RecipeSyncService(
                     fabricSynced++
                     if (config.debug) {
                         plugin.logger.info(
-                            plugin.localeManager.getMessage(
+                            plugin.localeManager.plain(
                                 "sync.sent-fabric", payload.recipes, payload.kilobytes, player.name,
                             )
                         )
@@ -138,7 +138,7 @@ class RecipeSyncService(
                     neoForgeSynced++
                     if (config.debug) {
                         plugin.logger.info(
-                            plugin.localeManager.getMessage(
+                            plugin.localeManager.plain(
                                 "sync.sent-neoforge", payload.recipes, payload.kilobytes, player.name,
                             )
                         )
@@ -148,7 +148,7 @@ class RecipeSyncService(
 
             LoaderChannel.NONE -> {
                 if (config.debug) {
-                    plugin.logger.info(plugin.localeManager.getMessage("sync.no-channel", player.name))
+                    plugin.logger.info(plugin.localeManager.plain("sync.no-channel", player.name))
                 }
             }
         }
@@ -161,7 +161,7 @@ class RecipeSyncService(
             recipeBookSynced++
             if (config.debug) {
                 plugin.logger.info(
-                    plugin.localeManager.getMessage("sync.sent-recipe-book", recipeBookSent, player.name)
+                    plugin.localeManager.plain("sync.sent-recipe-book", recipeBookSent, player.name)
                 )
             }
         }
@@ -179,7 +179,7 @@ class RecipeSyncService(
         // list the moment the vanilla recipe packet arrives, before a plugin may send anything.
         // This line is what tells the player that warning is out of date.
         if (config.notifyPlayer && result.sentAnything) {
-            player.sendMessage(plugin.localeManager.getMessage("sync.player-notice"))
+            player.sendMessage(plugin.localeManager.component("sync.player-notice"))
         }
 
         return result

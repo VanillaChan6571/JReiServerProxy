@@ -1,7 +1,9 @@
 package gg.nekohosting.vanilla.jreiproxyserver.i18n
 
 import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
-import org.bukkit.ChatColor
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
@@ -42,17 +44,31 @@ class LocaleManager(private val plugin: JReiProxyServer) {
     }
 
     /**
-     * Looks the key up in the admin's file first, then in the jar.
+     * The message with its `&` colour codes still in place.
      *
-     * The fallback deliberately reads the bundled copy rather than the English file on disk: that
-     * one can be just as out of date as the language file, which is how a raw key ends up in chat.
+     * The lookup goes to the admin's file first, then to the jar. The fallback deliberately reads
+     * the bundled copy rather than the English file on disk: that one can be just as out of date as
+     * the language file, which is how a raw key ends up in chat.
      */
-    fun getMessage(key: String, vararg args: Any): String {
+    private fun raw(key: String, vararg args: Any): String {
         val message = messages?.getString(key)
             ?: bundled?.getString(key)
             ?: bundledEnglish?.getString(key)
             ?: return key
-
-        return ChatColor.translateAlternateColorCodes('&', MessageFormat.format(message, *args))
+        return MessageFormat.format(message, *args)
     }
+
+    /**
+     * The message as a component, which is the only form that renders in colour.
+     *
+     * Everything the plugin shows a player or writes to the console goes through here. Handing a
+     * legacy-coded string to `java.util.logging` instead prints the section signs literally,
+     * because the plugin logger never passes through Adventure's serialiser.
+     */
+    fun component(key: String, vararg args: Any): Component =
+        LegacyComponentSerializer.legacyAmpersand().deserialize(raw(key, *args))
+
+    /** The message with all formatting removed, for log levels that carry no colour. */
+    fun plain(key: String, vararg args: Any): String =
+        PlainTextComponentSerializer.plainText().serialize(component(key, *args))
 }

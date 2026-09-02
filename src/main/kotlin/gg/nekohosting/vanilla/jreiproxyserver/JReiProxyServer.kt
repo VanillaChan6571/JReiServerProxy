@@ -10,6 +10,7 @@ import gg.nekohosting.vanilla.jreiproxyserver.network.Channels
 import gg.nekohosting.vanilla.jreiproxyserver.network.ViewerPacketListener
 import gg.nekohosting.vanilla.jreiproxyserver.recipe.RecipeCache
 import gg.nekohosting.vanilla.jreiproxyserver.recipe.RecipeSyncService
+import net.kyori.adventure.text.Component
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 
@@ -72,22 +73,38 @@ class JReiProxyServer : JavaPlugin() {
             it.tabCompleter = playerResyncCommand
         }
 
-        logger.info(localeManager.getMessage("plugin.decor"))
-        logger.info(localeManager.getMessage("plugin.enabled", pluginMeta.version))
+        console("plugin.decor")
+        console("plugin.enabled", pluginMeta.version)
 
-        logger.info(localeManager.getMessage("plugin.caching-recipes"))
+        console("plugin.caching-recipes")
         rebuildRecipeCache()
 
         if (!pluginConfig.syncEnabled) {
-            logger.warning(localeManager.getMessage("plugin.sync-disabled"))
+            warn("plugin.sync-disabled")
         }
 
-        logger.info(localeManager.getMessage("plugin.ready"))
-        logger.info(localeManager.getMessage("plugin.decor"))
+        console("plugin.ready")
+        console("plugin.decor")
+    }
+
+    /**
+     * Writes a coloured line to the console.
+     *
+     * The plugin logger is `java.util.logging`, which prints section signs literally; only the
+     * console sender is an Adventure audience, so anything with colour has to go through it. The
+     * plugin name is added by hand to match what the logger would have prefixed.
+     */
+    fun console(key: String, vararg args: Any) {
+        server.consoleSender.sendMessage(CONSOLE_PREFIX.append(localeManager.component(key, *args)))
+    }
+
+    /** Warnings keep the logger, so they stay at WARN level; colour is stripped rather than shown raw. */
+    fun warn(key: String, vararg args: Any) {
+        logger.warning(localeManager.plain(key, *args))
     }
 
     override fun onDisable() {
-        logger.info(localeManager.getMessage("plugin.disabled"))
+        console("plugin.disabled")
     }
 
     fun reloadPluginConfig() {
@@ -95,11 +112,9 @@ class JReiProxyServer : JavaPlugin() {
         reloadConfig()
         pluginConfig = PluginConfig.from(config)
         localeManager.loadLocales()
-        logger.info(
-            localeManager.getMessage("plugin.reloaded", pluginConfig.syncEnabled, pluginConfig.recipeBlacklist.size)
-        )
+        console("plugin.reloaded", pluginConfig.syncEnabled, pluginConfig.recipeBlacklist.size)
 
-        logger.info(localeManager.getMessage("plugin.recaching-recipes"))
+        console("plugin.recaching-recipes")
         rebuildRecipeCache()
     }
 
@@ -107,28 +122,22 @@ class JReiProxyServer : JavaPlugin() {
     fun rebuildRecipeCache() {
         recipeCache.rebuild(pluginConfig.recipeBlacklist)
 
-        logger.info(
-            localeManager.getMessage("plugin.cached-recipes", recipeCache.recipeCount, recipeCache.blacklistedCount)
-        )
+        console("plugin.cached-recipes", recipeCache.recipeCount, recipeCache.blacklistedCount)
         recipeCache.countsByType.forEach { (type, count) ->
-            logger.info(localeManager.getMessage("plugin.found-recipes", count, type))
+            console("plugin.found-recipes", count, type)
         }
-        logger.info(
-            localeManager.getMessage(
-                "plugin.payload-sizes",
-                recipeCache.fabricPayload.kilobytes,
-                recipeCache.neoForgePayload.kilobytes,
-                recipeCache.recipeBookEntries,
-                recipeCache.recipeBookAddPackets.size,
-            )
+        console(
+            "plugin.payload-sizes",
+            recipeCache.fabricPayload.kilobytes,
+            recipeCache.neoForgePayload.kilobytes,
+            recipeCache.recipeBookEntries,
+            recipeCache.recipeBookAddPackets.size,
         )
         if (recipeCache.skippedSerializers.isNotEmpty()) {
-            logger.warning(
-                localeManager.getMessage(
-                    "plugin.skipped-serializers",
-                    recipeCache.skippedRecipeCount,
-                    recipeCache.skippedSerializers.joinToString(", "),
-                )
+            warn(
+                "plugin.skipped-serializers",
+                recipeCache.skippedRecipeCount,
+                recipeCache.skippedSerializers.joinToString(", "),
             )
         }
     }
@@ -151,6 +160,7 @@ class JReiProxyServer : JavaPlugin() {
 
     private companion object {
         val BUNDLED_LANG = listOf("lang/en.yml", "lang/zh_cn.yml")
+        val CONSOLE_PREFIX: Component = Component.text("[JReiProxyServer] ")
     }
 
     private fun registerChannels() {

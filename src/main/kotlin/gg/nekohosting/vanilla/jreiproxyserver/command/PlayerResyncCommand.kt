@@ -24,17 +24,17 @@ class PlayerResyncCommand(private val plugin: JReiProxyServer) : CommandExecutor
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         val player = sender as? Player
         if (player == null) {
-            sender.sendMessage(plugin.localeManager.getMessage("command.player-only"))
+            sender.sendMessage(plugin.localeManager.component("command.player-only"))
             return true
         }
 
         if (args.isNotEmpty() && args[0].lowercase() !in SUBCOMMANDS) {
-            player.sendMessage(plugin.localeManager.getMessage("command.resync.self-usage", label))
+            player.sendMessage(plugin.localeManager.component("command.resync.self-usage", label))
             return true
         }
 
         if (!plugin.pluginConfig.syncEnabled) {
-            player.sendMessage(plugin.localeManager.getMessage("command.resync.disabled"))
+            player.sendMessage(plugin.localeManager.component("command.resync.disabled"))
             return true
         }
 
@@ -44,7 +44,7 @@ class PlayerResyncCommand(private val plugin: JReiProxyServer) : CommandExecutor
         val since = System.currentTimeMillis() - (lastUse[player.uniqueId] ?: 0L)
         if (!exempt && cooldown > 0 && since < cooldown) {
             val remaining = ((cooldown - since) + 999) / 1000
-            player.sendMessage(plugin.localeManager.getMessage("command.resync.cooldown", remaining))
+            player.sendMessage(plugin.localeManager.component("command.resync.cooldown", remaining))
             return true
         }
         lastUse[player.uniqueId] = System.currentTimeMillis()
@@ -53,10 +53,10 @@ class PlayerResyncCommand(private val plugin: JReiProxyServer) : CommandExecutor
         val result = plugin.recipeSyncService.sync(player)
         if (result.sentAnything) {
             player.sendMessage(
-                plugin.localeManager.getMessage("command.resync.self", result.recipesSent, result.recipeBookEntriesSent)
+                plugin.localeManager.component("command.resync.self", result.recipesSent, result.recipeBookEntriesSent)
             )
         } else {
-            player.sendMessage(plugin.localeManager.getMessage("command.resync.self-nothing"))
+            player.sendMessage(plugin.localeManager.component("command.resync.self-nothing"))
         }
         return true
     }

@@ -13,14 +13,14 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (!sender.hasPermission("jreiproxyserver.admin")) {
-            sender.sendMessage(localeManager.getMessage("command.no-permission"))
+            sender.sendMessage(localeManager.component("command.no-permission"))
             return true
         }
 
         when (args.firstOrNull()?.lowercase()) {
             "reload" -> {
                 plugin.reloadPluginConfig()
-                sender.sendMessage(localeManager.getMessage("command.reload-success"))
+                sender.sendMessage(localeManager.component("command.reload-success"))
             }
 
             "resync" -> resync(sender, args)
@@ -32,7 +32,7 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
 
     private fun resync(sender: CommandSender, args: Array<out String>) {
         if (args.size < 2) {
-            sender.sendMessage(localeManager.getMessage("command.resync.usage"))
+            sender.sendMessage(localeManager.component("command.resync.usage"))
             return
         }
 
@@ -42,22 +42,22 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
                 plugin.connectionListener.forgetSync(player)
                 if (plugin.recipeSyncService.sync(player).sentAnything) count++
             }
-            sender.sendMessage(localeManager.getMessage("command.resync.all", count))
+            sender.sendMessage(localeManager.component("command.resync.all", count))
             return
         }
 
         val player = Bukkit.getPlayer(args[1])
         if (player == null) {
-            sender.sendMessage(localeManager.getMessage("command.player-not-found", args[1]))
+            sender.sendMessage(localeManager.component("command.player-not-found", args[1]))
             return
         }
 
         plugin.connectionListener.forgetSync(player)
         val result = plugin.recipeSyncService.sync(player)
         if (result.sentAnything) {
-            sender.sendMessage(localeManager.getMessage("command.resync.player", player.name))
+            sender.sendMessage(localeManager.component("command.resync.player", player.name))
         } else {
-            sender.sendMessage(localeManager.getMessage("command.resync.skipped", player.name))
+            sender.sendMessage(localeManager.component("command.resync.skipped", player.name))
         }
     }
 
@@ -65,20 +65,20 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
         val cache = plugin.recipeCache
         val service = plugin.recipeSyncService
 
-        sender.sendMessage(localeManager.getMessage("command.info.header"))
+        sender.sendMessage(localeManager.component("command.info.header"))
         if (!plugin.pluginConfig.syncEnabled) {
-            sender.sendMessage(localeManager.getMessage("command.info.disabled"))
+            sender.sendMessage(localeManager.component("command.info.disabled"))
         }
-        sender.sendMessage(localeManager.getMessage("command.info.recipes", cache.recipeCount, cache.blacklistedCount))
+        sender.sendMessage(localeManager.component("command.info.recipes", cache.recipeCount, cache.blacklistedCount))
         sender.sendMessage(
-            localeManager.getMessage(
+            localeManager.component(
                 "command.info.payloads",
                 cache.fabricPayload.kilobytes,
                 cache.neoForgePayload.kilobytes,
             )
         )
         sender.sendMessage(
-            localeManager.getMessage(
+            localeManager.component(
                 "command.info.recipe-book",
                 cache.recipeBookEntries,
                 cache.recipeBookAddPackets.size,
@@ -86,7 +86,7 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
             )
         )
         sender.sendMessage(
-            localeManager.getMessage(
+            localeManager.component(
                 "command.info.players",
                 service.fabricSynced,
                 service.neoForgeSynced,
@@ -96,10 +96,10 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
     }
 
     private fun sendHelp(sender: CommandSender) {
-        sender.sendMessage(localeManager.getMessage("command.help-header"))
-        sender.sendMessage(localeManager.getMessage("command.help-reload"))
-        sender.sendMessage(localeManager.getMessage("command.help-resync"))
-        sender.sendMessage(localeManager.getMessage("command.help-info"))
+        sender.sendMessage(localeManager.component("command.help-header"))
+        sender.sendMessage(localeManager.component("command.help-reload"))
+        sender.sendMessage(localeManager.component("command.help-resync"))
+        sender.sendMessage(localeManager.component("command.help-info"))
     }
 
     override fun onTabComplete(
