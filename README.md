@@ -80,6 +80,17 @@ REI's packets travel inside Architectury's split-packet framing, which prefixes 
 
 The Fabric payload only carries recipes whose serializer is in the `minecraft` namespace. Fabric's decoder discards the entire payload on meeting a serializer the client did not opt into, and that opt-in list arrives in the configuration phase, which a plugin cannot see. Anything skipped is reported in the startup log.
 
+## Licence
+
+MIT — see [`LICENSE`](LICENSE).
+
+The recipe-transfer handling is ported from JEI and REI, both MIT licensed, and the released jar
+bundles the Kotlin standard library under Apache 2.0. Those notices are in
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
+Unofficial and third party. Not affiliated with or endorsed by the authors of JEI, REI, Fabric,
+NeoForge or Architectury.
+
 ## Building
 
 JDK 25 and an internet connection. The build downloads a Paper development bundle on first run, which takes a while.
