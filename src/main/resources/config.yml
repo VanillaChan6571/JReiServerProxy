@@ -1,69 +1,73 @@
-# JReiProxyServer 配置文件
+# JReiProxyServer configuration
 
-# 插件使用的语言。
-# 目前支持: en, zh_cn
-# 如果您创建了新的语言文件 (例如 fr.yml), 在这里填入 fr 即可。
+# Language used by the plugin.
+# Bundled: en, zh_cn
+# If you add your own file under lang/ (for example fr.yml), put "fr" here.
 language: "en"
 
-# 配方同步
+# Recipe sync
 #
-# 自 Minecraft 1.21.2 起, 服务器不再向客户端发送配方数据, 因此 JEI 会提示
-# "This server does not provide recipes to JEI" 并显示客户端自带的配方。
-# 本插件会以模组加载器的方式把服务器配方补发给客户端。
+# Since Minecraft 1.21.2 the server no longer sends recipe data to clients, so JEI reports
+# "This server does not provide recipes to JEI" and falls back to the recipes shipped with the
+# client. This plugin sends them the way a mod loader would.
 recipe-sync:
-  # 总开关。关闭后 JEI 只会显示客户端自带的配方。
+  # Master switch. With this off, JEI only ever shows the client's own recipes.
   enabled: true
 
-  # 玩家加入时自动发送配方。
+  # Send the recipes when a player joins.
   on-join: true
 
-  # 数据包重载 (/reload, /minecraft:reload) 后重新发送配方。
+  # Re-encode and resend after a datapack reload (/reload, /minecraft:reload).
   on-datapack-reload: true
 
-  # 谁会收到完整的原版配方书。
-  # REI 不读取 JEI 使用的同步通道, 而是从配方书构建列表, 所以它需要这一份。
-  # 可见的副作用: 原版配方书会显示所有配方为已解锁。服务端并未真正解锁任何配方,
-  # 玩家点击配方时服务器仍然会检查他实际会做什么。
-  #   auto - 只发给声明了 REI 通道的客户端 (默认)
-  #   all  - 发给所有携带配方查看器的客户端
-  #   off  - 不发送
+  # Who is sent the full vanilla recipe book.
+  # REI does not read the channel JEI uses; it builds its list from the recipe book, so it needs
+  # this instead. The visible side effect is that the vanilla recipe book lists everything as
+  # known. Nothing is unlocked server-side and it is not an exploit: the server still checks what
+  # a player actually knows when they click a recipe.
+  #   auto - only clients that announced a REI channel (default)
+  #   all  - every client carrying a recipe viewer
+  #   off  - nobody
   recipe-book: auto
 
-  # 发送配方后补一个配方更新包, 让已经加载完毕的 JEI/REI 重新读取配方。
-  # 关闭后配方仍会送达, 但 JEI 会继续显示客户端自带的配方。
+  # Send a recipe-update packet afterwards, so a viewer that has already loaded re-reads the
+  # recipes. With this off the recipes still arrive, but JEI keeps showing the client's defaults.
   trigger-recipe-update: true
 
-  # /jei 与 /rei 两次使用之间的冷却 (秒)。
-  # 每次重新发送都会重发全部配方与配方书, 因此并不廉价; 拥有 jreiproxyserver.admin 的玩家不受限制。
-  # 设为 0 可关闭冷却。
+  # Cooldown between uses of /jei and /rei, in seconds.
+  # Each resend is the whole recipe set plus the recipe book, so it is not cheap. Players with
+  # jreiproxyserver.admin are exempt. Set to 0 to remove the limit.
   player-resync-cooldown-seconds: 30
 
-  # 同步成功后向玩家发送一条聊天提示。
-  # JEI 在服务器发出的原版配方包到达的瞬间就会建立配方列表, 那时任何插件都还来不及发送东西,
-  # 所以它总会先打印一次 "does not provide recipes to JEI" 警告。这条提示用来说明该警告已经过时。
-  # 文本位于 lang/ 目录下的 sync.player-notice。
+  # Tell the player in chat once the recipes have arrived.
+  # JEI builds its recipe list the moment the server's own recipe packet arrives, which is before
+  # any plugin is allowed to send anything, so it always prints its warning once. This line is
+  # what tells the player that warning is already out of date.
+  # The wording lives under sync.player-notice in the lang/ files.
   notify-player: true
 
-# 作弊模式 (在 JEI/REI 中直接取出、删除物品)
+# Cheat mode: taking items straight out of the recipe viewer, and deleting the held item.
 cheat-mode:
-  # 总开关。关闭后所有取出/删除请求都会被拒绝。
+  # Master switch. With this off, every take and delete request is refused.
   enabled: true
 
-  # 是否让所有创造模式玩家都能使用作弊模式, 无论其权限如何。
-  # 关闭时, 只有拥有 jreiproxyserver.cheat 权限的玩家可以使用 (默认 OP)。
+  # Also let any player in creative mode cheat, whatever their permissions.
+  # With this off, only players with jreiproxyserver.cheat can (OP by default).
   allow-creative: false
 
-# 配方转移 (在配方界面点击 "+" 把材料填入工作台)
+# Recipe transfer: the "+" button that fills a crafting grid from the player's inventory.
 recipe-transfer:
+  # Master switch. REI decides whether to offer the button from whether the server registered its
+  # transfer channel, so turning this off hides the button rather than failing on click.
   enabled: true
 
-# 配方黑名单
-# 在此列表中的所有配方ID, 都不会被发送给客户端。
-# 这对于隐藏某些不希望玩家看到的配方非常有用。
-# 示例:
+# Recipe blacklist
+# Recipes listed here are left out of everything the plugin sends, which is useful for hiding
+# recipes you do not want players to see.
+# Example:
 #  - "minecraft:stick"
 #  - "another_mod:secret_item"
 recipe-blacklist: []
 
-# 输出每个玩家的同步细节 (客户端类型、配方数量、载荷大小)。
+# Log per-player sync details: client type, recipe counts, payload sizes and REI packet handling.
 debug: false

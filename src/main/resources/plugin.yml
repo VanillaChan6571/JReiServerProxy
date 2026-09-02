@@ -2,22 +2,22 @@ name: JReiProxyServer
 version: '${version}'
 main: gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
 api-version: '26.2'
-author: xinian
+author: VanillaChanny
 description: Serves server recipes to JEI and REI clients, and answers their cheat-mode and recipe-transfer packets.
 commands:
   jreiproxy:
-    description: JReiProxyServer 的管理命令。
+    description: Administrative commands for JReiProxyServer.
     usage: /<command> <reload|resync|info>
     permission: jreiproxyserver.admin
     aliases: [jeiproxy, jrp]
   jei:
-    description: 请求服务器重新发送配方。
+    description: Ask the server to send its recipes again.
     usage: /<command> [resync|retry]
     aliases: [rei]
 permissions:
   jreiproxyserver.admin:
-    description: 允许使用 JReiProxyServer 的管理命令。
+    description: Use the administrative commands, and bypass the /jei cooldown.
     default: op
   jreiproxyserver.cheat:
-    description: 允许在 JEI/REI 中使用作弊模式 (取出、删除、填入物品)。
+    description: Use cheat mode in JEI and REI (take, delete and place items).
     default: op
