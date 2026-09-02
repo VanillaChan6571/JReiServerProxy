@@ -10,7 +10,7 @@ This plugin sends them the way a mod loader would. No client mod, no mod loader 
 
 ## Requirements
 
-- Paper, Purpur or a fork on Minecraft 26.2. The plugin is compiled against that version's server internals and will not load on another.
+- Paper, Purpur, Folia or a fork on Minecraft 26.2. The plugin is compiled against that version's server internals and will not load on another.
 - A Fabric or NeoForge client with JEI or REI, as your players already have. Fabric clients need Minecraft 1.21.10 or newer — Fabric API's recipe-sync channel does not exist below that.
 
 ## What it does
@@ -69,6 +69,16 @@ Operators:
 | `debug` | Log per-player sync details. |
 
 Keys added by a plugin update are written into your existing `config.yml` and `lang/*.yml` on startup, with their comments. Anything you changed is left alone, and a message missing from your language file falls back to the copy inside the jar rather than appearing as a raw key.
+
+### Folia
+
+Declared `folia-supported`. Per-player work is scheduled on the region thread owning that player
+rather than on a main thread that does not exist there, the recipe data is published as a single
+immutable snapshot so a datapack reload cannot be observed half-applied, and the state shared
+between players is concurrent.
+
+Untested on an actual Folia server: the code follows Folia's threading rules and runs on Paper, but
+nobody has yet run it under regionised threading.
 
 ### Notes
 

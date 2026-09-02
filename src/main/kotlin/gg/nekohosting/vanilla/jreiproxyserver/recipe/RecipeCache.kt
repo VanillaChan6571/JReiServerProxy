@@ -31,35 +31,51 @@ class RecipeCache {
         val kilobytes: String get() = "%.1f".format(bytes.size / 1024.0)
     }
 
-    var recipeCount: Int = 0
+    /**
+     * Everything a rebuild produces, swapped in as one value.
+     *
+     * On Folia a rebuild runs on the global region thread while players read this from their own
+     * region threads. Publishing the whole result at once means a reader either sees the previous
+     * datapack state or the new one, never a mix — the add and remove recipe-book packets in
+     * particular have to belong to the same generation, or a resend duplicates entries.
+     */
+    class Snapshot(
+        val recipeCount: Int = 0,
+        val blacklistedCount: Int = 0,
+        val countsByType: Map<String, Int> = emptyMap(),
+        val skippedSerializers: List<String> = emptyList(),
+        val skippedRecipeCount: Int = 0,
+        val fabricPayload: Payload = EMPTY,
+        val neoForgePayload: Payload = EMPTY,
+        val recipeBookAddPackets: List<Packet<*>> = emptyList(),
+        val recipeBookRemovePackets: List<Packet<*>> = emptyList(),
+        val recipeBookEntries: Int = 0,
+    )
+
+    @Volatile
+    var snapshot: Snapshot = Snapshot()
         private set
-    var blacklistedCount: Int = 0
-        private set
-    var countsByType: Map<String, Int> = emptyMap()
-        private set
+
+    val recipeCount: Int get() = snapshot.recipeCount
+    val blacklistedCount: Int get() = snapshot.blacklistedCount
+    val countsByType: Map<String, Int> get() = snapshot.countsByType
 
     /** Serializers dropped from the Fabric payload because the client would refuse the whole thing. */
-    var skippedSerializers: List<String> = emptyList()
-        private set
-    var skippedRecipeCount: Int = 0
-        private set
+    val skippedSerializers: List<String> get() = snapshot.skippedSerializers
+    val skippedRecipeCount: Int get() = snapshot.skippedRecipeCount
 
-    var fabricPayload: Payload = EMPTY
-        private set
-    var neoForgePayload: Payload = EMPTY
-        private set
+    val fabricPayload: Payload get() = snapshot.fabricPayload
+    val neoForgePayload: Payload get() = snapshot.neoForgePayload
 
-    var recipeBookAddPackets: List<Packet<*>> = emptyList()
-        private set
-    var recipeBookRemovePackets: List<Packet<*>> = emptyList()
-        private set
-    var recipeBookEntries: Int = 0
-        private set
+    val recipeBookAddPackets: List<Packet<*>> get() = snapshot.recipeBookAddPackets
+    val recipeBookRemovePackets: List<Packet<*>> get() = snapshot.recipeBookRemovePackets
+    val recipeBookEntries: Int get() = snapshot.recipeBookEntries
 
     /**
      * Re-reads the server's recipes and re-encodes everything.
      *
-     * Runs on the main thread: it touches the recipe manager and the registries.
+     * Runs on the server's main or global region thread: it touches the recipe manager and the
+     * registries. The result is published as a single snapshot when everything is encoded.
      */
     fun rebuild(blacklist: Set<String>) {
         val server = minecraftServer
@@ -80,14 +96,26 @@ class RecipeCache {
             counts[type] = (counts[type] ?: 0) + 1
         }
 
-        recipeCount = kept.size
-        blacklistedCount = blacklisted
-        countsByType = counts.toSortedMap()
+        val fabric = buildFabricPayload(kept, registries)
+        val recipeBook = buildRecipeBookPackets(kept, registries)
 
-        buildFabricPayload(kept, registries)
-        buildNeoForgePayload(kept, registries)
-        buildRecipeBookPackets(kept, registries)
+        snapshot = Snapshot(
+            recipeCount = kept.size,
+            blacklistedCount = blacklisted,
+            countsByType = counts.toSortedMap(),
+            skippedSerializers = fabric.skippedSerializers,
+            skippedRecipeCount = fabric.skippedRecipes,
+            fabricPayload = fabric.payload,
+            neoForgePayload = buildNeoForgePayload(kept, registries),
+            recipeBookAddPackets = recipeBook.add,
+            recipeBookRemovePackets = recipeBook.remove,
+            recipeBookEntries = recipeBook.entries,
+        )
     }
+
+    private class FabricResult(val payload: Payload, val skippedSerializers: List<String>, val skippedRecipes: Int)
+
+    private class RecipeBookResult(val add: List<Packet<*>>, val remove: List<Packet<*>>, val entries: Int)
 
     /**
      * `fabric:recipe_sync`: a list of (serializer id, recipes) groups, each recipe written by its
@@ -99,7 +127,7 @@ class RecipeCache {
      * vanilla serializers, so anything outside the `minecraft` namespace is dropped here: losing one
      * modded group costs those recipes, keeping it costs every recipe on the server.
      */
-    private fun buildFabricPayload(holders: List<RecipeHolder<*>>, registries: RegistryAccess) {
+    private fun buildFabricPayload(holders: List<RecipeHolder<*>>, registries: RegistryAccess): FabricResult {
         val bySerializer = LinkedHashMap<RecipeSerializer<*>, MutableList<RecipeHolder<*>>>()
         for (holder in holders) {
             bySerializer.getOrPut(holder.value().serializer) { ArrayList() }.add(holder)
@@ -121,9 +149,6 @@ class RecipeCache {
             }
         }
 
-        skippedSerializers = skipped
-        skippedRecipeCount = skippedRecipes
-
         val buf = registries.newBuf()
         try {
             buf.writeVarInt(included.size)
@@ -139,7 +164,7 @@ class RecipeCache {
                     codec.encode(buf, holder.value())
                 }
             }
-            fabricPayload = Payload(buf.copyBytes(), includedRecipes, included.size)
+            return FabricResult(Payload(buf.copyBytes(), includedRecipes, included.size), skipped, skippedRecipes)
         } finally {
             buf.release()
         }
@@ -149,7 +174,7 @@ class RecipeCache {
      * `neoforge:recipe_content`: the set of recipe types followed by every recipe holder. NeoForge
      * decodes each holder's serializer by registry id, so unlike Fabric there is nothing to filter.
      */
-    private fun buildNeoForgePayload(holders: List<RecipeHolder<*>>, registries: RegistryAccess) {
+    private fun buildNeoForgePayload(holders: List<RecipeHolder<*>>, registries: RegistryAccess): Payload {
         val types = LinkedHashSet<RecipeType<*>>()
         for (holder in holders) {
             types.add(holder.value().type)
@@ -165,7 +190,7 @@ class RecipeCache {
             for (holder in holders) {
                 RecipeHolder.STREAM_CODEC.encode(buf, holder)
             }
-            neoForgePayload = Payload(buf.copyBytes(), holders.size, types.size)
+            return Payload(buf.copyBytes(), holders.size, types.size)
         } finally {
             buf.release()
         }
@@ -179,7 +204,7 @@ class RecipeCache {
      * recipes. Nothing is unlocked server-side by this: the server still checks what a player
      * actually knows when they click a recipe.
      */
-    private fun buildRecipeBookPackets(holders: List<RecipeHolder<*>>, registries: RegistryAccess) {
+    private fun buildRecipeBookPackets(holders: List<RecipeHolder<*>>, registries: RegistryAccess): RecipeBookResult {
         val recipeManager = minecraftServer.recipeManager
         val displays = ArrayList<RecipeDisplayEntry>()
         for (holder in holders) {
@@ -229,9 +254,7 @@ class RecipeCache {
             from = to
         }
 
-        recipeBookAddPackets = addPackets
-        recipeBookRemovePackets = removePackets
-        recipeBookEntries = displays.size
+        return RecipeBookResult(addPackets, removePackets, displays.size)
     }
 
     /**

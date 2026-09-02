@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.player.PlayerRegisterChannelEvent
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Decides *when* a player is sent the recipes.
@@ -21,8 +22,10 @@ import java.util.UUID
  */
 class PlayerConnectionListener(private val plugin: JReiProxyServer) : Listener {
 
-    private val synced = HashSet<UUID>()
-    private val scheduled = HashSet<UUID>()
+    // Folia runs each player on the region thread owning them, so join, quit and channel
+    // registration for different players land on different threads at once.
+    private val synced = ConcurrentHashMap.newKeySet<UUID>()
+    private val scheduled = ConcurrentHashMap.newKeySet<UUID>()
 
     @EventHandler
     fun onRegisterChannel(event: PlayerRegisterChannelEvent) {
@@ -49,7 +52,10 @@ class PlayerConnectionListener(private val plugin: JReiProxyServer) : Listener {
         if (!plugin.pluginConfig.syncOnDatapackReload) return
         plugin.rebuildRecipeCache()
         synced.clear()
-        plugin.server.onlinePlayers.forEach { plugin.recipeSyncService.sync(it) }
+        // Each player must be touched on the region thread that owns them.
+        plugin.server.onlinePlayers.forEach { player ->
+            player.scheduler.run(plugin, { plugin.recipeSyncService.sync(player) }, null)
+        }
     }
 
     fun forgetSync(player: Player) {
@@ -62,15 +68,20 @@ class PlayerConnectionListener(private val plugin: JReiProxyServer) : Listener {
         val id = player.uniqueId
         if (id in synced || !scheduled.add(id)) return
 
-        plugin.server.scheduler.runTaskLater(plugin, Runnable {
-            scheduled.remove(id)
-            if (!player.isOnline || id in synced) return@Runnable
-
-            val result = plugin.recipeSyncService.sync(player)
-            if (result.sentAnything) {
-                synced.add(id)
-            }
-        }, delayTicks)
+        // The entity scheduler, rather than the Bukkit one: it exists on Paper and is the only
+        // form Folia supports, where it runs on whichever region owns the player. The retired
+        // callback fires if they disconnect before the delay elapses.
+        player.scheduler.runDelayed(
+            plugin,
+            {
+                scheduled.remove(id)
+                if (player.isOnline && id !in synced && plugin.recipeSyncService.sync(player).sentAnything) {
+                    synced.add(id)
+                }
+            },
+            { scheduled.remove(id) },
+            delayTicks,
+        )
     }
 
     private fun isViewerChannel(channel: String): Boolean =

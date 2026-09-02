@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * `/jei` and `/rei` — lets a player ask for the recipes again, without any permission.
@@ -19,7 +20,7 @@ import java.util.UUID
 class PlayerResyncCommand(private val plugin: JReiProxyServer) : CommandExecutor, TabCompleter {
 
     /** When each player last asked, so a resend cannot be used to flood the server. */
-    private val lastUse = HashMap<UUID, Long>()
+    private val lastUse = ConcurrentHashMap<UUID, Long>()
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         val player = sender as? Player

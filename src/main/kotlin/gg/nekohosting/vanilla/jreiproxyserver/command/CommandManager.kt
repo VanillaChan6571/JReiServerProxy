@@ -37,12 +37,14 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
         }
 
         if (args[1].equals("all", ignoreCase = true)) {
-            var count = 0
-            for (player in Bukkit.getOnlinePlayers()) {
+            // Each player is resynced on the region thread that owns them, so the count is
+            // reported as the number scheduled rather than the number that succeeded.
+            val players = Bukkit.getOnlinePlayers().toList()
+            for (player in players) {
                 plugin.connectionListener.forgetSync(player)
-                if (plugin.recipeSyncService.sync(player).sentAnything) count++
+                player.scheduler.run(plugin, { plugin.recipeSyncService.sync(player) }, null)
             }
-            sender.sendMessage(localeManager.component("command.resync.all", count))
+            sender.sendMessage(localeManager.component("command.resync.all", players.size))
             return
         }
 

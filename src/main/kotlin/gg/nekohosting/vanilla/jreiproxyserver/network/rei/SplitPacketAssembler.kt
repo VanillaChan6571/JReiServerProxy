@@ -1,6 +1,7 @@
 package gg.nekohosting.vanilla.jreiproxyserver.network.rei
 
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Undoes Architectury's `SplitPacketTransformer` framing, which every REI packet goes through.
@@ -20,7 +21,9 @@ class SplitPacketAssembler {
         val parts = ArrayList<ByteArray>()
     }
 
-    private val pending = HashMap<Key, Pending>()
+    // Plugin messages arrive on the region thread owning each player, so several players can be
+    // mid-reassembly on different threads at once.
+    private val pending = ConcurrentHashMap<Key, Pending>()
 
     /**
      * Returns the complete payload, or null when this message was only a fragment and more are

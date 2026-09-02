@@ -10,6 +10,7 @@ import gg.nekohosting.vanilla.jreiproxyserver.nms.sendRawPayload
 import net.minecraft.network.protocol.common.ClientboundUpdateTagsPacket
 import net.minecraft.tags.TagNetworkSerialization
 import org.bukkit.entity.Player
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Which loader channel a client can receive recipes on. */
 enum class LoaderChannel {
@@ -42,12 +43,14 @@ class RecipeSyncService(
     private val cache: RecipeCache,
 ) {
 
-    var fabricSynced: Int = 0
-        private set
-    var neoForgeSynced: Int = 0
-        private set
-    var recipeBookSynced: Int = 0
-        private set
+    // Counted from every region thread that syncs a player, so plain ints would drop increments.
+    private val fabricCount = AtomicInteger()
+    private val neoForgeCount = AtomicInteger()
+    private val recipeBookCount = AtomicInteger()
+
+    val fabricSynced: Int get() = fabricCount.get()
+    val neoForgeSynced: Int get() = neoForgeCount.get()
+    val recipeBookSynced: Int get() = recipeBookCount.get()
 
     /**
      * Whether the player is running something that wants recipes.
@@ -116,7 +119,7 @@ class RecipeSyncService(
                 if (payload.recipes > 0) {
                     handle.sendRawPayload(Channels.Loader.FABRIC_RECIPE_SYNC, payload.bytes)
                     recipesSent = payload.recipes
-                    fabricSynced++
+                    fabricCount.incrementAndGet()
                     if (config.debug) {
                         plugin.logger.info(
                             plugin.localeManager.plain(
@@ -135,7 +138,7 @@ class RecipeSyncService(
                     // the tag set has to be current before the recipes land.
                     handle.sendPacket(buildTagsPacket())
                     recipesSent = payload.recipes
-                    neoForgeSynced++
+                    neoForgeCount.incrementAndGet()
                     if (config.debug) {
                         plugin.logger.info(
                             plugin.localeManager.plain(
@@ -158,7 +161,7 @@ class RecipeSyncService(
             cache.recipeBookRemovePackets.forEach(handle::sendPacket)
             cache.recipeBookAddPackets.forEach(handle::sendPacket)
             recipeBookSent = cache.recipeBookEntries
-            recipeBookSynced++
+            recipeBookCount.incrementAndGet()
             if (config.debug) {
                 plugin.logger.info(
                     plugin.localeManager.plain("sync.sent-recipe-book", recipeBookSent, player.name)

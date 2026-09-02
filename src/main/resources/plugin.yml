@@ -2,6 +2,7 @@ name: JReiProxyServer
 version: '${version}'
 main: gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
 api-version: '26.2'
+folia-supported: true
 author: VanillaChanny
 description: Serves server recipes to JEI and REI clients, and answers their cheat-mode and recipe-transfer packets.
 commands:
