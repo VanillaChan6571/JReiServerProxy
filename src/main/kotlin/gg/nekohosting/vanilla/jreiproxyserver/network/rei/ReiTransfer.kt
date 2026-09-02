@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.network.rei
+package gg.nekohosting.vanilla.jreiproxyserver.network.rei
 
 import net.minecraft.core.component.DataComponents
 import net.minecraft.server.level.ServerPlayer

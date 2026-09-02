@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.network
+package gg.nekohosting.vanilla.jreiproxyserver.network
 
 /**
  * The plugin-message channels JEI and REI actually speak on Minecraft 26.2.

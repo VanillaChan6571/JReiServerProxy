@@ -1,6 +1,6 @@
-package com.xinian.jreiproxyserver.i18n
+package gg.nekohosting.vanilla.jreiproxyserver.i18n
 
-import com.xinian.jreiproxyserver.JReiProxyServer
+import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
 import org.bukkit.ChatColor
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration

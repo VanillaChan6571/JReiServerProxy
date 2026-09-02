@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.network.rei
+package gg.nekohosting.vanilla.jreiproxyserver.network.rei
 
 import java.util.UUID
 

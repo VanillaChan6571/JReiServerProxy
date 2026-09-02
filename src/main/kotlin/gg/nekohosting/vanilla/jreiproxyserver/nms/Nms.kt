@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.nms
+package gg.nekohosting.vanilla.jreiproxyserver.nms
 
 import io.netty.buffer.Unpooled
 import net.minecraft.core.RegistryAccess

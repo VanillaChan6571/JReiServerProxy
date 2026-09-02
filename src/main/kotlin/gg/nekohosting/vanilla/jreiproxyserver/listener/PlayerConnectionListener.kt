@@ -1,7 +1,7 @@
-package com.xinian.jreiproxyserver.listener
+package gg.nekohosting.vanilla.jreiproxyserver.listener
 
-import com.xinian.jreiproxyserver.JReiProxyServer
-import com.xinian.jreiproxyserver.network.Channels
+import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
+import gg.nekohosting.vanilla.jreiproxyserver.network.Channels
 import io.papermc.paper.event.server.ServerResourcesReloadedEvent
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

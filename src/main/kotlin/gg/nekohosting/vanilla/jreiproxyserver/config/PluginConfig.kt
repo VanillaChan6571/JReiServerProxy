@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.config
+package gg.nekohosting.vanilla.jreiproxyserver.config
 
 import org.bukkit.configuration.file.FileConfiguration
 import java.util.Locale

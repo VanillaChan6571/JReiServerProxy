@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.network
+package gg.nekohosting.vanilla.jreiproxyserver.network
 
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.inventory.Slot

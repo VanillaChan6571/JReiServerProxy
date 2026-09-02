@@ -1,6 +1,6 @@
 name: JReiProxyServer
 version: '${version}'
-main: com.xinian.jreiproxyserver.JReiProxyServer
+main: gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
 api-version: '26.2'
 author: xinian
 description: Serves server recipes to JEI and REI clients, and answers their cheat-mode and recipe-transfer packets.

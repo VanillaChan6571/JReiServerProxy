@@ -1,15 +1,15 @@
-package com.xinian.jreiproxyserver
+package gg.nekohosting.vanilla.jreiproxyserver
 
-import com.xinian.jreiproxyserver.command.CommandManager
-import com.xinian.jreiproxyserver.command.PlayerResyncCommand
-import com.xinian.jreiproxyserver.config.PluginConfig
-import com.xinian.jreiproxyserver.config.ResourceBackfill
-import com.xinian.jreiproxyserver.i18n.LocaleManager
-import com.xinian.jreiproxyserver.listener.PlayerConnectionListener
-import com.xinian.jreiproxyserver.network.Channels
-import com.xinian.jreiproxyserver.network.ViewerPacketListener
-import com.xinian.jreiproxyserver.recipe.RecipeCache
-import com.xinian.jreiproxyserver.recipe.RecipeSyncService
+import gg.nekohosting.vanilla.jreiproxyserver.command.CommandManager
+import gg.nekohosting.vanilla.jreiproxyserver.command.PlayerResyncCommand
+import gg.nekohosting.vanilla.jreiproxyserver.config.PluginConfig
+import gg.nekohosting.vanilla.jreiproxyserver.config.ResourceBackfill
+import gg.nekohosting.vanilla.jreiproxyserver.i18n.LocaleManager
+import gg.nekohosting.vanilla.jreiproxyserver.listener.PlayerConnectionListener
+import gg.nekohosting.vanilla.jreiproxyserver.network.Channels
+import gg.nekohosting.vanilla.jreiproxyserver.network.ViewerPacketListener
+import gg.nekohosting.vanilla.jreiproxyserver.recipe.RecipeCache
+import gg.nekohosting.vanilla.jreiproxyserver.recipe.RecipeSyncService
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 

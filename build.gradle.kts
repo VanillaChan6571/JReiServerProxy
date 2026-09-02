@@ -5,7 +5,7 @@ plugins {
     id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
-group = "com.xinian.jreiproxyserver"
+group = "gg.nekohosting.vanilla"
 // Tracks the Minecraft version this is built against: the first two components are Mojang's,
 // the third is the plugin revision for that version. The jar only loads on the matching server.
 version = "26.2.0"

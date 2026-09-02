@@ -1,8 +1,8 @@
-package com.xinian.jreiproxyserver.recipe
+package gg.nekohosting.vanilla.jreiproxyserver.recipe
 
-import com.xinian.jreiproxyserver.nms.copyBytes
-import com.xinian.jreiproxyserver.nms.minecraftServer
-import com.xinian.jreiproxyserver.nms.newBuf
+import gg.nekohosting.vanilla.jreiproxyserver.nms.copyBytes
+import gg.nekohosting.vanilla.jreiproxyserver.nms.minecraftServer
+import gg.nekohosting.vanilla.jreiproxyserver.nms.newBuf
 import net.minecraft.core.RegistryAccess
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf

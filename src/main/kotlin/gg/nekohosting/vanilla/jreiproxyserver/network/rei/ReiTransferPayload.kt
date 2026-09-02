@@ -1,4 +1,4 @@
-package com.xinian.jreiproxyserver.network.rei
+package gg.nekohosting.vanilla.jreiproxyserver.network.rei
 
 import net.minecraft.core.RegistryAccess
 import net.minecraft.nbt.CompoundTag

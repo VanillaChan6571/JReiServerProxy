@@ -1,6 +1,6 @@
-package com.xinian.jreiproxyserver.command
+package gg.nekohosting.vanilla.jreiproxyserver.command
 
-import com.xinian.jreiproxyserver.JReiProxyServer
+import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor

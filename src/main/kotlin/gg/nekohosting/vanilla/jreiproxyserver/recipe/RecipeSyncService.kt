@@ -1,12 +1,12 @@
-package com.xinian.jreiproxyserver.recipe
+package gg.nekohosting.vanilla.jreiproxyserver.recipe
 
-import com.xinian.jreiproxyserver.JReiProxyServer
-import com.xinian.jreiproxyserver.config.RecipeBookMode
-import com.xinian.jreiproxyserver.network.Channels
-import com.xinian.jreiproxyserver.nms.minecraftServer
-import com.xinian.jreiproxyserver.nms.nms
-import com.xinian.jreiproxyserver.nms.sendPacket
-import com.xinian.jreiproxyserver.nms.sendRawPayload
+import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
+import gg.nekohosting.vanilla.jreiproxyserver.config.RecipeBookMode
+import gg.nekohosting.vanilla.jreiproxyserver.network.Channels
+import gg.nekohosting.vanilla.jreiproxyserver.nms.minecraftServer
+import gg.nekohosting.vanilla.jreiproxyserver.nms.nms
+import gg.nekohosting.vanilla.jreiproxyserver.nms.sendPacket
+import gg.nekohosting.vanilla.jreiproxyserver.nms.sendRawPayload
 import net.minecraft.network.protocol.common.ClientboundUpdateTagsPacket
 import net.minecraft.tags.TagNetworkSerialization
 import org.bukkit.entity.Player

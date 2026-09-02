@@ -1,15 +1,15 @@
-package com.xinian.jreiproxyserver.network
+package gg.nekohosting.vanilla.jreiproxyserver.network
 
-import com.xinian.jreiproxyserver.JReiProxyServer
-import com.xinian.jreiproxyserver.nms.copyBytes
-import com.xinian.jreiproxyserver.nms.minecraftServer
-import com.xinian.jreiproxyserver.nms.newBuf
-import com.xinian.jreiproxyserver.nms.nms
-import com.xinian.jreiproxyserver.network.rei.NotEnoughMaterialsException
-import com.xinian.jreiproxyserver.network.rei.ReiTransfer
-import com.xinian.jreiproxyserver.network.rei.ReiTransferPayload
-import com.xinian.jreiproxyserver.network.rei.SplitPacketAssembler
-import com.xinian.jreiproxyserver.nms.readBuf
+import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
+import gg.nekohosting.vanilla.jreiproxyserver.nms.copyBytes
+import gg.nekohosting.vanilla.jreiproxyserver.nms.minecraftServer
+import gg.nekohosting.vanilla.jreiproxyserver.nms.newBuf
+import gg.nekohosting.vanilla.jreiproxyserver.nms.nms
+import gg.nekohosting.vanilla.jreiproxyserver.network.rei.NotEnoughMaterialsException
+import gg.nekohosting.vanilla.jreiproxyserver.network.rei.ReiTransfer
+import gg.nekohosting.vanilla.jreiproxyserver.network.rei.ReiTransferPayload
+import gg.nekohosting.vanilla.jreiproxyserver.network.rei.SplitPacketAssembler
+import gg.nekohosting.vanilla.jreiproxyserver.nms.readBuf
 import net.minecraft.ChatFormatting
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.RegistryFriendlyByteBuf
