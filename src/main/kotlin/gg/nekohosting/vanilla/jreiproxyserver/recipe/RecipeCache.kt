@@ -130,7 +130,9 @@ class RecipeCache {
             for ((serializer, group) in included) {
                 buf.writeIdentifier(BuiltInRegistries.RECIPE_SERIALIZER.getKey(serializer)!!)
                 buf.writeVarInt(group.size)
-                @Suppress("UNCHECKED_CAST")
+                // Deprecated upstream but still the only way to reach a serializer's wire format;
+                // Fabric's own recipe sync encodes through exactly this call.
+                @Suppress("UNCHECKED_CAST", "DEPRECATION")
                 val codec = serializer.streamCodec() as StreamCodec<RegistryFriendlyByteBuf, Recipe<*>>
                 for (holder in group) {
                     buf.writeResourceKey(holder.id)

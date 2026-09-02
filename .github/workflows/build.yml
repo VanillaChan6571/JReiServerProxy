@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile against Paper 26.2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # Minecraft 26.x class files are Java 25, so anything older cannot even read the server jar.
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # paperweight downloads, decompiles and patches the Paper server on a cold cache, which is by
+      # far the slowest part of the build. The key follows build.gradle.kts so bumping the dev
+      # bundle to a new Minecraft version re-runs it instead of reusing a stale tree.
+      - name: Cache the Paper development bundle
+        uses: actions/cache@v6
+        with:
+          path: ~/.gradle/caches/paperweight-userdev
+          key: paperweight-${{ runner.os }}-${{ hashFiles('build.gradle.kts') }}
+          restore-keys: paperweight-${{ runner.os }}-
+
+      # Compiles and assembles, which is what catches a broken plugin.yml or a resource that stopped
+      # filtering, not just a Kotlin error. Nothing is uploaded and nothing is published: this job
+      # only answers whether the branch builds.
+      - name: Build
+        run: ./gradlew build --stacktrace

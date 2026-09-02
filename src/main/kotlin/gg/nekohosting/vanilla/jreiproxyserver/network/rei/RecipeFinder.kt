@@ -110,7 +110,9 @@ class RecipeFinder {
                 val assignment = tryAssigningNewItem(crafts)
                 if (assignment == null) {
                     val complete = assigned == ingredientCount
-                    val emit = complete && output != null
+                    // Only a complete match describes a recipe worth reporting; a partial one is
+                    // unwound in silence.
+                    val emit = if (complete) output else null
                     clearAllVisited()
                     clearSatisfied()
 
@@ -120,7 +122,7 @@ class RecipeFinder {
                             if (isAssigned(item, ingredient)) {
                                 unassign(item, ingredient)
                                 put(items[item], crafts)
-                                if (emit) output!!(items[item], ingredients[ingredient])
+                                emit?.invoke(items[item], ingredients[ingredient])
                                 break
                             }
                         }
