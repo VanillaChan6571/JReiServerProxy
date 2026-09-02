@@ -19,7 +19,7 @@ This plugin sends them the way a mod loader would. No client mod, no mod loader 
 
 JEI builds its list the moment the server's own recipe packet arrives, which is before any plugin can send anything, so it prints its warning once and then reloads with the server's recipes a moment later. The warning is unavoidable and does not mean the sync failed; `recipe-sync.notify-player` follows it with a line saying so.
 
-**Cheat mode.** Pulling an item out of the list, deleting the held item, and setting a hotbar slot, for both JEI and REI. Gated on the `jeiserverproxy.cheat` permission, and reported back to the client so JEI's own refusal message is accurate.
+**Cheat mode.** Pulling an item out of the list, deleting the held item, and setting a hotbar slot, for both JEI and REI. Gated on the `jreiproxyserver.cheat` permission, and reported back to the client so JEI's own refusal message is accurate.
 
 **Recipe transfer.** The "+" button that fills a crafting grid from the player's inventory, for both JEI (`recipe_transfer`, `recipe_transfer_counted`) and REI (`move_items_new`). Each mod's own server-side algorithm is reimplemented rather than approximated: the client decides which slots to use, but the server picks the items and moves them, so a stale client view cannot duplicate or void anything. REI decides whether to offer the button purely from whether the server registered its channel, so it is only advertised while `recipe-transfer.enabled` is on.
 
