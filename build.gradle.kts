@@ -1,48 +1,51 @@
 plugins {
-    kotlin("jvm") version "2.3.0-Beta2"
-    id("com.gradleup.shadow") version "8.3.0"
-    id("xyz.jpenilla.run-paper") version "2.3.1"
+    kotlin("jvm") version "2.4.10"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.23"
+    id("com.gradleup.shadow") version "9.6.1"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
-group = "com.xinian.jeiserverproxy"
-version = "1.0.4-SNAPSHOT"
+group = "com.xinian.jreiproxyserver"
+// Tracks the Minecraft version this is built against: the first two components are Mojang's,
+// the third is the plugin revision for that version. The jar only loads on the matching server.
+version = "26.2.0"
 
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/") {
         name = "papermc-repo"
     }
-    maven("https://oss.sonatype.org/content/groups/public/") {
-        name = "sonatype"
-    }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    // Mojang-mapped Paper server. The recipe payloads JEI and REI read are NMS-encoded, so this
+    // plugin needs the server internals, not just the Bukkit API.
+    paperweight.paperDevBundle("26.2.build.121-stable")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 }
 
-tasks {
-    runServer {
+// Minecraft 26.x class files are Java 25.
+val targetJavaVersion = 25
 
-        minecraftVersion("1.21")
-    }
-}
-
-val targetJavaVersion = 21
 kotlin {
     jvmToolchain(targetJavaVersion)
 }
 
-tasks.build {
-    dependsOn("shadowJar")
-}
+tasks {
+    build {
+        dependsOn(shadowJar)
+    }
 
-tasks.processResources {
-    val props = mapOf("version" to version)
-    inputs.properties(props)
-    filteringCharset = "UTF-8"
-    filesMatching("plugin.yml") {
-        expand(props)
+    runServer {
+        minecraftVersion("26.2")
+    }
+
+    processResources {
+        val props = mapOf("version" to version)
+        inputs.properties(props)
+        filteringCharset = "UTF-8"
+        filesMatching("plugin.yml") {
+            expand(props)
+        }
     }
 }

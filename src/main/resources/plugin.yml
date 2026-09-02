@@ -1,15 +1,23 @@
-name: JEIServerProxy
-version: '1.0.2-SNAPSHOT'
-main: com.xinian.jeiserverproxy.JEIServerProxy
-api-version: '1.21'
+name: JReiProxyServer
+version: '${version}'
+main: com.xinian.jreiproxyserver.JReiProxyServer
+api-version: '26.2'
 author: xinian
-description: Sends recipe data to clients for JEI compatibility and provides advanced controls.
+description: Serves server recipes to JEI and REI clients, and answers their cheat-mode and recipe-transfer packets.
 commands:
-  jeiproxy:
-    description: JEIServerProxy 的主命令。
-    usage: /<command> <reload|handshake>
-    permission: jeiserverproxy.admin
+  jreiproxy:
+    description: JReiProxyServer 的管理命令。
+    usage: /<command> <reload|resync|info>
+    permission: jreiproxyserver.admin
+    aliases: [jeiproxy, jrp]
+  jei:
+    description: 请求服务器重新发送配方。
+    usage: /<command> [resync|retry]
+    aliases: [rei]
 permissions:
-  jeiserverproxy.admin:
-    description: 允许使用 JEIServerProxy 的管理命令。
+  jreiproxyserver.admin:
+    description: 允许使用 JReiProxyServer 的管理命令。
+    default: op
+  jreiproxyserver.cheat:
+    description: 允许在 JEI/REI 中使用作弊模式 (取出、删除、填入物品)。
     default: op

@@ -1,19 +1,69 @@
-# JEIServerProxy 配置文件
+# JReiProxyServer 配置文件
 
 # 插件使用的语言。
 # 目前支持: en, zh_cn
 # 如果您创建了新的语言文件 (例如 fr.yml), 在这里填入 fr 即可。
 language: "en"
 
-# 是否在玩家加入时，自动向其发送所有服务器配方。
-# 如果您只想通过其他方式管理配方，可以将其设置为 false。
-send-recipes-on-join: true
+# 配方同步
+#
+# 自 Minecraft 1.21.2 起, 服务器不再向客户端发送配方数据, 因此 JEI 会提示
+# "This server does not provide recipes to JEI" 并显示客户端自带的配方。
+# 本插件会以模组加载器的方式把服务器配方补发给客户端。
+recipe-sync:
+  # 总开关。关闭后 JEI 只会显示客户端自带的配方。
+  enabled: true
+
+  # 玩家加入时自动发送配方。
+  on-join: true
+
+  # 数据包重载 (/reload, /minecraft:reload) 后重新发送配方。
+  on-datapack-reload: true
+
+  # 谁会收到完整的原版配方书。
+  # REI 不读取 JEI 使用的同步通道, 而是从配方书构建列表, 所以它需要这一份。
+  # 可见的副作用: 原版配方书会显示所有配方为已解锁。服务端并未真正解锁任何配方,
+  # 玩家点击配方时服务器仍然会检查他实际会做什么。
+  #   auto - 只发给声明了 REI 通道的客户端 (默认)
+  #   all  - 发给所有携带配方查看器的客户端
+  #   off  - 不发送
+  recipe-book: auto
+
+  # 发送配方后补一个配方更新包, 让已经加载完毕的 JEI/REI 重新读取配方。
+  # 关闭后配方仍会送达, 但 JEI 会继续显示客户端自带的配方。
+  trigger-recipe-update: true
+
+  # /jei 与 /rei 两次使用之间的冷却 (秒)。
+  # 每次重新发送都会重发全部配方与配方书, 因此并不廉价; 拥有 jreiproxyserver.admin 的玩家不受限制。
+  # 设为 0 可关闭冷却。
+  player-resync-cooldown-seconds: 30
+
+  # 同步成功后向玩家发送一条聊天提示。
+  # JEI 在服务器发出的原版配方包到达的瞬间就会建立配方列表, 那时任何插件都还来不及发送东西,
+  # 所以它总会先打印一次 "does not provide recipes to JEI" 警告。这条提示用来说明该警告已经过时。
+  # 文本位于 lang/ 目录下的 sync.player-notice。
+  notify-player: true
+
+# 作弊模式 (在 JEI/REI 中直接取出、删除物品)
+cheat-mode:
+  # 总开关。关闭后所有取出/删除请求都会被拒绝。
+  enabled: true
+
+  # 是否让所有创造模式玩家都能使用作弊模式, 无论其权限如何。
+  # 关闭时, 只有拥有 jreiproxyserver.cheat 权限的玩家可以使用 (默认 OP)。
+  allow-creative: false
+
+# 配方转移 (在配方界面点击 "+" 把材料填入工作台)
+recipe-transfer:
+  enabled: true
 
 # 配方黑名单
-# 在此列表中的所有配方ID，都不会被发送给客户端。
+# 在此列表中的所有配方ID, 都不会被发送给客户端。
 # 这对于隐藏某些不希望玩家看到的配方非常有用。
 # 示例:
 #  - "minecraft:stick"
 #  - "another_mod:secret_item"
-recipe-blacklist:
-  - "minecraft:example_recipe_to_hide"
+recipe-blacklist: []
+
+# 输出每个玩家的同步细节 (客户端类型、配方数量、载荷大小)。
+debug: false
