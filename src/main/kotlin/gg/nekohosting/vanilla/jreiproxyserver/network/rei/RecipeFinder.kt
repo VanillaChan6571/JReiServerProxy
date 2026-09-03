@@ -59,7 +59,9 @@ class RecipeFinder {
     fun countRecipeCrafts(ingredients: List<List<ItemStack>>, maxCrafts: Int): Int =
         Filter(toIngredients(ingredients)).tryPickAll(maxCrafts)
 
-    private fun keyOf(stack: ItemStack) = ItemKey(stack.typeHolder(), stack.componentsPatch)
+    // Via the item's own registry holder rather than ItemStack's accessor for it, which is
+    // spelled differently on either side of the 26.x rename; this spelling is stable across both.
+    private fun keyOf(stack: ItemStack) = ItemKey(stack.item.builtInRegistryHolder(), stack.componentsPatch)
 
     private fun toIngredients(ingredients: List<List<ItemStack>>): List<FinderIngredient> =
         ingredients.mapIndexedNotNull { index, stacks ->

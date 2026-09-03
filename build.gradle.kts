@@ -6,9 +6,33 @@ plugins {
 }
 
 group = "gg.nekohosting.vanilla"
-// Tracks the Minecraft version this is built against: the first two components are Mojang's,
-// the third is the plugin revision for that version. The jar only loads on the matching server.
-version = "26.2.0"
+
+/**
+ * One build target per Minecraft version.
+ *
+ * A single jar cannot cover several versions: the plugin encodes recipes through the server's own
+ * classes, and those change shape between releases. RecipeSerializer, for instance, is a class on
+ * 26.2 and an interface on 1.21.11 -- the same source compiles against both, then dies with an
+ * IncompatibleClassChangeError on the wrong one. So each version gets its own jar.
+ *
+ * Pick one with -Pminecraft=1.21.11; the default is the newest.
+ */
+data class Target(val devBundle: String, val apiVersion: String, val pluginVersion: String)
+
+val targets = mapOf(
+    "26.2" to Target("26.2.build.121-stable", "26.2", "26.2.0"),
+    // Folia's stable line, so this is the build Folia servers want until 26.2 leaves beta.
+    "1.21.11" to Target("1.21.11-R0.1-SNAPSHOT", "1.21", "1.21.11.0"),
+)
+
+val minecraftVersion = providers.gradleProperty("minecraft").getOrElse("26.2")
+val target = targets[minecraftVersion]
+    ?: error("Unknown -Pminecraft=$minecraftVersion. Known targets: ${targets.keys.joinToString()}")
+
+// Tracks the Minecraft version this is built against: Mojang's version, then the plugin revision
+// for it. The jar only loads on the matching server, so the version is also the compatibility
+// statement.
+version = target.pluginVersion
 
 repositories {
     mavenCentral()
@@ -20,12 +44,13 @@ repositories {
 dependencies {
     // Mojang-mapped Paper server. The recipe payloads JEI and REI read are NMS-encoded, so this
     // plugin needs the server internals, not just the Bukkit API.
-    paperweight.paperDevBundle("26.2.build.121-stable")
+    paperweight.paperDevBundle(target.devBundle)
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 }
 
-// Minecraft 26.x class files are Java 25.
-val targetJavaVersion = 25
+// Minecraft 26.x class files are Java 25; 1.21.x needs only 21, and building it on 25 would emit
+// class files its server cannot read.
+val targetJavaVersion = if (minecraftVersion.startsWith("26.")) 25 else 21
 
 kotlin {
     jvmToolchain(targetJavaVersion)
@@ -37,11 +62,11 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("26.2")
+        minecraftVersion(minecraftVersion)
     }
 
     processResources {
-        val props = mapOf("version" to version)
+        val props = mapOf("version" to version, "apiVersion" to target.apiVersion)
         inputs.properties(props)
         filteringCharset = "UTF-8"
         filesMatching("plugin.yml") {

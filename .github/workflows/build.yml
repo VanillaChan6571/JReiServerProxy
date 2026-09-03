@@ -15,19 +15,31 @@ concurrency:
 
 jobs:
   build:
-    name: Compile against Paper 26.2
+    # One jar per Minecraft version: the plugin encodes recipes through the server's own classes,
+    # which change shape between releases, so a single jar cannot cover both.
+    name: Build for Minecraft ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: '26.2'
+            java: '25'
+          - minecraft: '1.21.11'
+            java: '21'
 
     steps:
       - name: Check out
         uses: actions/checkout@v7
 
-      # Minecraft 26.x class files are Java 25, so anything older cannot even read the server jar.
-      - name: Set up JDK 25
+      # Minecraft 26.x class files are Java 25; 1.21.x only needs 21, and building it on 25 would
+      # emit class files its server cannot read.
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: ${{ matrix.java }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -39,11 +51,11 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.gradle/caches/paperweight-userdev
-          key: paperweight-${{ runner.os }}-${{ hashFiles('build.gradle.kts') }}
-          restore-keys: paperweight-${{ runner.os }}-
+          key: paperweight-${{ runner.os }}-${{ matrix.minecraft }}-${{ hashFiles('build.gradle.kts') }}
+          restore-keys: paperweight-${{ runner.os }}-${{ matrix.minecraft }}-
 
       # Compiles and assembles, which is what catches a broken plugin.yml or a resource that stopped
       # filtering, not just a Kotlin error. Nothing is uploaded and nothing is published: this job
       # only answers whether the branch builds.
       - name: Build
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build -Pminecraft=${{ matrix.minecraft }} --stacktrace

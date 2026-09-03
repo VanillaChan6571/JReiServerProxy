@@ -10,7 +10,7 @@ This plugin sends them the way a mod loader would. No client mod, no mod loader 
 
 ## Requirements
 
-- Paper, Purpur, Folia or a fork on Minecraft 26.2. The plugin is compiled against that version's server internals and will not load on another.
+- Paper, Purpur, Folia or a fork on Minecraft **26.2** or **1.21.11**. Take the jar matching your server: the plugin is compiled against that version's server internals and will not run on the other one.
 - A Fabric or NeoForge client with JEI or REI, as your players already have. Fabric clients need Minecraft 1.21.10 or newer — Fabric API's recipe-sync channel does not exist below that.
 
 ## What it does
@@ -27,7 +27,13 @@ JEI builds its list the moment the server's own recipe packet arrives, which is 
 
 ## Versioning
 
-The version is the Minecraft version this is built for, plus a plugin revision: `26.2.0` is the first release for Minecraft 26.2. The jar is compiled against that version's server internals and will not load on another, so the version number is also the compatibility statement.
+The version is the Minecraft version this is built for, plus a plugin revision: `26.2.0` is the first release for Minecraft 26.2, `1.21.11.0` the first for 1.21.11. The version number is therefore also the compatibility statement.
+
+There is one jar per Minecraft version because there has to be. The same source compiles against
+both, but the server classes it encodes recipes through change shape between releases —
+`RecipeSerializer` is a class on 26.2 and an interface on 1.21.11 — so a jar built for one dies with
+an `IncompatibleClassChangeError` on the other. 1.21.11 matters because that is Folia's stable line;
+Folia 26.2 exists only as a beta.
 
 ## Commands
 
@@ -105,10 +111,13 @@ NeoForge or Architectury.
 
 ## Building
 
-JDK 25 and an internet connection. The build downloads a Paper development bundle on first run, which takes a while.
+An internet connection, and a JDK matching the target (below). The first build of each target
+downloads and decompiles a Paper development bundle, which takes a while.
 
 ```bash
-./gradlew build
+./gradlew build                      # 26.2, the default
+./gradlew build -Pminecraft=1.21.11  # the Folia-stable target
 ```
 
-The jar lands in `build/libs`.
+The jar lands in `build/libs`. JDK 25 is needed for the 26.2 target; the 1.21.11 target builds on
+21. The build downloads a Paper development bundle for whichever target on first run.
