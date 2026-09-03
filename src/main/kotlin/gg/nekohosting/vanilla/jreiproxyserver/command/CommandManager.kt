@@ -89,12 +89,21 @@ class CommandManager(private val plugin: JReiProxyServer) : CommandExecutor, Tab
         )
         sender.sendMessage(
             localeManager.component(
+                "command.info.rei-displays",
+                cache.reiDisplayPayload.displays,
+                cache.reiDisplayPayload.kilobytes,
+                cache.reiDisplayPayload.serializers,
+            )
+        )
+        sender.sendMessage(
+            localeManager.component(
                 "command.info.players",
                 service.fabricSynced,
                 service.neoForgeSynced,
                 service.recipeBookSynced,
             )
         )
+        sender.sendMessage(localeManager.component("command.info.rei-players", service.reiDisplaySynced))
     }
 
     private fun sendHelp(sender: CommandSender) {

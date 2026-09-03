@@ -49,7 +49,8 @@ SOFTWARE.
 The server side of REI's recipe transfer is a port of `InputSlotCrafter`, `NewInputSlotCrafter` and
 `RecipeFinder`, in `network/rei/ReiTransfer.kt` and `network/rei/RecipeFinder.kt`. REI's ingredient
 matcher is in turn derived from Minecraft's own recipe-book placement algorithm. The transfer
-payload format and slot-accessor NBT shape were taken from REI's sources.
+payload format, slot-accessor NBT shape, display-sync wire format and registered vanilla display
+serializers were taken from REI's sources.
 
 ```
 MIT License
@@ -98,4 +99,4 @@ The wire formats these define are implemented from their public sources; no code
 - **NeoForge** — <https://github.com/neoforged/NeoForge> — LGPL 2.1 — the `neoforge:recipe_content`
   payload.
 - **Architectury API** — <https://github.com/architectury/architectury-api> — LGPL 3.0 — the
-  split-packet framing REI's packets travel in.
+  split-packet framing and byte-array payload envelope REI's packets travel in.

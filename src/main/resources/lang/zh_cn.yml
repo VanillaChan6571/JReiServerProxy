@@ -10,6 +10,7 @@ command:
     skipped: "&e{0} 没有服务器可以发送的配方查看器。"
     self-usage: "&c用法: /{0} [resync|retry]"
     self: "&a配方已重新发送: &f{0}&a 条配方, &f{1}&a 条配方书条目。"
+    self-rei: "&a配方已重新发送: &f{0}&a 条加载器配方, &f{2}&a 条 REI 显示。"
     self-nothing: "&e你的客户端没有注册服务器可发送的配方查看器。"
     cooldown: "&e请等待 {0} 秒后再重新请求配方。"
     disabled: "&c本服务器已关闭配方同步。"
@@ -18,7 +19,9 @@ command:
     recipes: "&7配方: &f{0} &7(黑名单隐藏 {1} 条)"
     payloads: "&7载荷大小: &fFabric {0} KB&7, &fNeoForge {1} KB"
     recipe-book: "&7配方书: &f{0} 条, 共 {1} 个数据包, 模式 {2}"
+    rei-displays: "&7REI 显示同步: &f{0} 条 ({1} KB), 共 {2} 种序列化器"
     players: "&7已同步玩家: &f{0} Fabric&7, &f{1} NeoForge&7, &f{2} 配方书"
+    rei-players: "&7REI 显示同步: &f{0} 名玩家"
     disabled: "&c配方同步已在配置中关闭。"
   help-header: "&6--- JReiProxyServer 帮助 ---"
   help-reload: "&a/jeiproxy reload &f- 重载插件配置。"
@@ -35,8 +38,11 @@ plugin:
   cached-recipes: "&a已缓存 {0} 条配方。(黑名单忽略 {1} 条)"
   found-recipes: "&7- 找到 {0} 条 {1} 配方。"
   payload-sizes: "&7- 载荷: &fFabric {0} KB&7, &fNeoForge {1} KB&7, 配方书 &f{2}&7 条, 共 &f{3}&7 个数据包。"
+  rei-display-payload: "&7- REI 显示同步: &f{0}&7 条, &f{1} KB&7, 共 &f{2}&7 种序列化器。"
   sync-disabled: "&e配方同步已关闭; JEI 客户端将显示自带的配方。"
   skipped-serializers: "&e已跳过 {0} 条来自非原版序列化器的配方: {1}"
+  skipped-rei-displays: "&e已跳过 {0} 条无法用 REI 26.2 表示的显示: {1}"
+  rei-cheat-fallback: "&e由于完整的 REI 显示同步不可用，未公布完整作弊通道；已保留配方安全回退。"
   reloaded: "配置已重载: recipe-sync={0}, 黑名单 {1} 条配方。"
 
 sync:
@@ -44,6 +50,7 @@ sync:
   sent-fabric: "已通过 Fabric 配方通道向 {2} 发送 {0} 条配方 ({1} KB)。"
   sent-neoforge: "已通过 NeoForge 配方通道向 {2} 发送 {0} 条配方 ({1} KB)。"
   sent-recipe-book: "已向 {1} 发送 {0} 条配方书条目。"
+  sent-rei-displays: "已向 {3} 发送 {0} 条 REI 显示 ({1} KB, {2} 个分片)。"
   no-channel: "{0} 没有服务器可用的配方通道; JEI 将显示客户端自带的配方。"
 
 cheat:

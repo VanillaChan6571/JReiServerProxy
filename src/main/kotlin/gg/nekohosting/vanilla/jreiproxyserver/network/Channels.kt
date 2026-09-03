@@ -66,14 +66,16 @@ object Channels {
          */
         const val MOVE_ITEMS = "roughlyenoughitems:move_items_new"
 
+        /** Server -> client: REI 26.2's version-pinned display list. */
+        const val SYNC_DISPLAYS = "roughlyenoughitems:sync_displays"
+
         /**
          * The three channels REI reads as "this server runs REI".
          *
          * `canUsePackets` is true only when all three of `create_item`, `create_item_grab` and
          * `delete_item` are advertised, and a server running REI is expected to push REI's own
-         * display sync — so once they are, REI *discards* every recipe-book entry it is sent and
-         * falls back to the client's local recipes. Advertising these costs the server's recipes,
-         * and advertising only some of them buys nothing: REI will not send any of the three
+         * display sync. The plugin therefore sends `sync_displays` whenever this trio is enabled;
+         * advertising only some of them buys nothing because REI will not send any of the three
          * unless all three exist.
          */
         val CHEAT_TRIO_INCOMING = listOf(
@@ -90,6 +92,8 @@ object Channels {
         val SAFE_INCOMING = listOf(MOVE_ITEMS, CREATE_ITEM_HOTBAR)
 
         val INCOMING = CHEAT_TRIO_INCOMING + SAFE_INCOMING
+
+        val OUTGOING = listOf(SYNC_DISPLAYS)
 
         /**
          * REI's namespace. A client announces only the channels it can *receive*, which are REI's

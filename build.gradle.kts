@@ -8,7 +8,7 @@ plugins {
 group = "gg.nekohosting.vanilla"
 // Tracks the Minecraft version this is built against: the first two components are Mojang's,
 // the third is the plugin revision for that version. The jar only loads on the matching server.
-version = "26.2.0"
+version = "26.2.1"
 
 repositories {
     mavenCentral()
@@ -22,6 +22,8 @@ dependencies {
     // plugin needs the server internals, not just the Bukkit API.
     paperweight.paperDevBundle("26.2.build.121-stable")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Minecraft 26.x class files are Java 25.
@@ -32,6 +34,10 @@ kotlin {
 }
 
 tasks {
+    test {
+        useJUnitPlatform()
+    }
+
     build {
         dependsOn(shadowJar)
     }
