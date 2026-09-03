@@ -79,8 +79,7 @@ rather than on a main thread that does not exist there, the recipe data is publi
 immutable snapshot so a datapack reload cannot be observed half-applied, and the state shared
 between players is concurrent.
 
-Untested on an actual Folia server: the code follows Folia's threading rules and runs on Paper, but
-nobody has yet run it under regionised threading.
+Tested on an actual Folia server: the code follows Folia's threading rules and runs on Paper API + Folia.
 
 ### Notes
 
