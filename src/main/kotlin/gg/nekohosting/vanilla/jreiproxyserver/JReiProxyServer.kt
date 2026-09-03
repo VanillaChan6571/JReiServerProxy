@@ -170,8 +170,8 @@ class JReiProxyServer : JavaPlugin() {
         // REI's cheat channels are only advertised when asked for: their presence makes REI throw
         // away the recipes this plugin exists to deliver. Transfer is gated separately by REI and
         // is always safe.
-        val reiChannels = Channels.Rei.TRANSFER_INCOMING +
-            if (pluginConfig.reiCheatChannels) Channels.Rei.CHEAT_INCOMING else emptyList()
+        val reiChannels = Channels.Rei.SAFE_INCOMING +
+            if (pluginConfig.reiCheatChannels) Channels.Rei.CHEAT_TRIO_INCOMING else emptyList()
 
         for (channel in Channels.Jei.INCOMING + reiChannels) {
             messenger.registerIncomingPluginChannel(this, channel, listener)

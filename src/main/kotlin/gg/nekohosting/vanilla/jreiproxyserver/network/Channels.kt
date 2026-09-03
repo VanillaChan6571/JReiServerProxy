@@ -67,25 +67,29 @@ object Channels {
         const val MOVE_ITEMS = "roughlyenoughitems:move_items_new"
 
         /**
-         * REI's cheat channels.
+         * The three channels REI reads as "this server runs REI".
          *
-         * Registering all of `create_item`, `create_item_grab` and `delete_item` makes REI's
-         * `canUsePackets` return true, which it reads as "this server runs REI" — and a server
-         * running REI is expected to push REI's own display sync, so REI then *discards* every
-         * recipe-book entry it is sent and falls back to the client's local recipes. Advertising
-         * these therefore costs the server's recipes.
+         * `canUsePackets` is true only when all three of `create_item`, `create_item_grab` and
+         * `delete_item` are advertised, and a server running REI is expected to push REI's own
+         * display sync — so once they are, REI *discards* every recipe-book entry it is sent and
+         * falls back to the client's local recipes. Advertising these costs the server's recipes,
+         * and advertising only some of them buys nothing: REI will not send any of the three
+         * unless all three exist.
          */
-        val CHEAT_INCOMING = listOf(
+        val CHEAT_TRIO_INCOMING = listOf(
             DELETE_ITEM,
             CREATE_ITEM,
             CREATE_ITEM_GRAB,
-            CREATE_ITEM_HOTBAR,
         )
 
-        /** Recipe transfer is gated separately and is safe to advertise on its own. */
-        val TRANSFER_INCOMING = listOf(MOVE_ITEMS)
+        /**
+         * Channels REI gates on their own, so advertising them does not disturb the recipe book.
+         * Hotbar cheat checks `canUseHotbarPackets`, and recipe transfer checks
+         * `isTransferPacketSupported`; neither consults `canUsePackets`.
+         */
+        val SAFE_INCOMING = listOf(MOVE_ITEMS, CREATE_ITEM_HOTBAR)
 
-        val INCOMING = CHEAT_INCOMING + TRANSFER_INCOMING
+        val INCOMING = CHEAT_TRIO_INCOMING + SAFE_INCOMING
 
         /**
          * REI's namespace. A client announces only the channels it can *receive*, which are REI's

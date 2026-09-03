@@ -19,7 +19,7 @@ This plugin sends them the way a mod loader would. No client mod, no mod loader 
 
 JEI builds its list the moment the server's own recipe packet arrives, which is before any plugin can send anything, so it prints its warning once and then reloads with the server's recipes a moment later. The warning is unavoidable and does not mean the sync failed; `recipe-sync.notify-player` follows it with a line saying so.
 
-**Cheat mode.** Pulling an item out of the list, deleting the held item, and setting a hotbar slot. Always available for JEI; for REI it is off by default, because advertising REI's cheat channels makes REI discard the server's recipes (see `cheat-mode.rei-channels`). Gated on the `jreiproxyserver.cheat` permission, and reported back to the client so JEI's own refusal message is accurate.
+**Cheat mode.** Pulling an item out of the list, deleting the held item, and setting a hotbar slot. Fully available for JEI. For REI, the hotbar and transfer channels are advertised by default because REI gates them on their own, while the three channels that would make REI discard the server's recipes are opt-in (see `cheat-mode.rei-channels`). Gated on the `jreiproxyserver.cheat` permission, and reported back to the client so JEI's own refusal message is accurate.
 
 **Recipe transfer.** The "+" button that fills a crafting grid from the player's inventory, for both JEI (`recipe_transfer`, `recipe_transfer_counted`) and REI (`move_items_new`). Each mod's own server-side algorithm is reimplemented rather than approximated: the client decides which slots to use, but the server picks the items and moves them, so a stale client view cannot duplicate or void anything. REI decides whether to offer the button purely from whether the server registered its channel, so it is only advertised while `recipe-transfer.enabled` is on.
 
@@ -64,7 +64,7 @@ Operators:
 | `recipe-sync.player-resync-cooldown-seconds` | Seconds a player must wait between `/jei` resyncs. `0` disables the limit. |
 | `recipe-sync.notify-player` | Tell the player in chat once the recipes have arrived, so JEI's earlier warning reads as out of date. Wording lives in `lang/`. |
 | `cheat-mode.enabled` | Master switch for cheat mode. |
-| `cheat-mode.rei-channels` | Advertise REI's cheat channels. Off by default because it costs the server's recipes: REI treats a server that accepts them as running REI itself, and then discards the recipe book it is sent in favour of the client's local recipes. JEI is unaffected and REI recipe transfer works either way. |
+| `cheat-mode.rei-channels` | Advertise the three REI cheat channels that make REI ignore the server's recipes. Off by default: REI treats a server accepting all three as running REI itself and discards the recipe book it is sent. With it off, REI recipe transfer and hotbar cheat still work, and operators still get REI's give through its `/give` fallback; only deleting the held item is lost. JEI is unaffected. |
 | `cheat-mode.allow-creative` | Also let any creative-mode player cheat, regardless of permission. |
 | `recipe-transfer.enabled` | Master switch for the "+" button. |
 | `recipe-blacklist` | Recipe ids (`namespace:key`) to leave out of everything sent. |
