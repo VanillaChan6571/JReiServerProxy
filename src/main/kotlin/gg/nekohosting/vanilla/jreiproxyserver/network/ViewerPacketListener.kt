@@ -75,7 +75,15 @@ class ViewerPacketListener(private val plugin: JReiProxyServer) : PluginMessageL
                 }
             }
         } catch (e: Exception) {
-            plugin.logger.warning("Failed to handle $channel from ${player.name}: ${e.message}")
+            // A decode failure puts whatever it managed to read into the exception message, which
+            // for a recipe transfer is the entire payload — kilobytes of NBT on one console line.
+            // The first bytes are what actually identifies a framing problem, so log those instead.
+            val head = message.take(4).joinToString(" ") { "0x%02x".format(it) }
+            val reason = e.message?.replace(CONTROL_CHARACTERS, "")?.take(120) ?: ""
+            plugin.logger.warning(
+                "Failed to handle $channel from ${player.name} " +
+                    "(${message.size} bytes, head=[$head]): ${e.javaClass.simpleName}: $reason"
+            )
             if (plugin.pluginConfig.debug) e.printStackTrace()
         }
     }
@@ -364,6 +372,9 @@ class ViewerPacketListener(private val plugin: JReiProxyServer) : PluginMessageL
 
     companion object {
         const val CHEAT_PERMISSION = "jreiproxyserver.cheat"
+
+        /** Decode failures quote raw payload bytes; stripping them keeps one failure to one line. */
+        private val CONTROL_CHARACTERS = Regex("""[\p{Cntrl}�]""")
 
         private val REI_CHANNELS = Channels.Rei.INCOMING.toSet()
     }
