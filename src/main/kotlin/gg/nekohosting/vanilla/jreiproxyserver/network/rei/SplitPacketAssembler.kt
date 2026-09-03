@@ -40,7 +40,7 @@ class SplitPacketAssembler {
         val body = framed.copyOfRange(1, framed.size)
 
         return when (framed[0].toInt()) {
-            ONLY -> body
+            ONLY -> unwrapInner(body)
 
             START -> {
                 if (body.size < Int.SIZE_BYTES) return null
@@ -60,7 +60,7 @@ class SplitPacketAssembler {
                 val state = pending.remove(key) ?: return null
                 state.parts.add(body)
                 // A mismatched count means fragments were lost; the payload cannot be trusted.
-                if (state.parts.size != state.expected) null else concat(state.parts)
+                if (state.parts.size != state.expected) null else unwrapInner(concat(state.parts))
             }
 
             else -> null
@@ -72,7 +72,21 @@ class SplitPacketAssembler {
         pending.keys.removeIf { it.player == player }
     }
 
-    /** Strips the VarInt-length prefix of a byte-array payload, or null if it is malformed. */
+    /**
+     * Removes a second byte-array wrapper, when the Architectury build on this Minecraft version
+     * adds one.
+     *
+     * Some versions length-prefix the encoded payload again inside the split framing, so the body
+     * reads as `VarInt | payload` rather than starting at the payload. The wrapper is recognised by
+     * spanning the remainder exactly; a real payload begins with its own first field, whose length
+     * never accounts for everything after it, so this leaves single-wrapped versions alone.
+     */
+    private fun unwrapInner(body: ByteArray): ByteArray = unwrapByteArray(body) ?: body
+
+    /**
+     * Strips a VarInt-length prefix, but only when the length accounts for exactly the rest of the
+     * array. Anything else is not a wrapper and is returned as null so the caller keeps the bytes.
+     */
     private fun unwrapByteArray(message: ByteArray): ByteArray? {
         var value = 0
         var shift = 0
@@ -82,9 +96,9 @@ class SplitPacketAssembler {
             value = value or ((byte and 0x7F) shl shift)
             at++
             if (byte and 0x80 == 0) {
-                // A length that does not match what actually arrived means this is not the payload
-                // shape we expect; dropping it is safer than reading past the end.
-                return if (value < 0 || at + value > message.size) null else message.copyOfRange(at, at + value)
+                // Must account for exactly the remainder: a shorter value is the payload's own
+                // first field, not a wrapper around it.
+                return if (value < 0 || at + value != message.size) null else message.copyOfRange(at, message.size)
             }
             shift += 7
             if (shift >= 32) return null

@@ -221,7 +221,7 @@ class ViewerPacketListener(private val plugin: JReiProxyServer) : PluginMessageL
         val stack: ItemStack
         val slot: Int
         try {
-            stack = if (optional) ItemStack.OPTIONAL_STREAM_CODEC.decode(buf) else ItemStack.STREAM_CODEC.decode(buf)
+            stack = if (optional) readReiItemStack(buf) else ItemStack.STREAM_CODEC.decode(buf)
             slot = buf.readVarInt()
         } finally {
             buf.release()
@@ -359,11 +359,20 @@ class ViewerPacketListener(private val plugin: JReiProxyServer) : PluginMessageL
     private fun readItemStack(message: ByteArray, optional: Boolean): ItemStack {
         val buf = registryBuf(message)
         return try {
-            if (optional) ItemStack.OPTIONAL_STREAM_CODEC.decode(buf) else ItemStack.STREAM_CODEC.decode(buf)
+            if (optional) readReiItemStack(buf) else ItemStack.STREAM_CODEC.decode(buf)
         } finally {
             buf.release()
         }
     }
+
+    /**
+     * Reads an item stack the way REI writes one on this Minecraft version.
+     *
+     * REI's cheat packets do not use the item stream codec here: on 1.21.11 it still speaks the
+     * older raw-buffer network API, which writes the stack as JSON through its codec instead.
+     */
+    private fun readReiItemStack(buf: RegistryFriendlyByteBuf): ItemStack =
+        buf.readLenientJsonWithCodec(ItemStack.OPTIONAL_CODEC)
 
     /** Forgets any half-assembled REI payload from a player who left mid-transfer. */
     fun onPlayerQuit(player: Player) {

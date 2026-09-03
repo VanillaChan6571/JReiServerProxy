@@ -61,6 +61,7 @@ class RecipeFinder {
 
     // Via the item's own registry holder rather than ItemStack's accessor for it, which is
     // spelled differently on either side of the 26.x rename; this spelling is stable across both.
+    @Suppress("DEPRECATION")
     private fun keyOf(stack: ItemStack) = ItemKey(stack.item.builtInRegistryHolder(), stack.componentsPatch)
 
     private fun toIngredients(ingredients: List<List<ItemStack>>): List<FinderIngredient> =
