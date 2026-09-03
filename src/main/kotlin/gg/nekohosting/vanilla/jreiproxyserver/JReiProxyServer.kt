@@ -167,13 +167,19 @@ class JReiProxyServer : JavaPlugin() {
         val listener = ViewerPacketListener(this).also { packetListener = it }
         val messenger = server.messenger
 
-        for (channel in Channels.Jei.INCOMING + Channels.Rei.INCOMING) {
+        // REI's cheat channels are only advertised when asked for: their presence makes REI throw
+        // away the recipes this plugin exists to deliver. Transfer is gated separately by REI and
+        // is always safe.
+        val reiChannels = Channels.Rei.TRANSFER_INCOMING +
+            if (pluginConfig.reiCheatChannels) Channels.Rei.CHEAT_INCOMING else emptyList()
+
+        for (channel in Channels.Jei.INCOMING + reiChannels) {
             messenger.registerIncomingPluginChannel(this, channel, listener)
         }
         for (channel in Channels.Jei.OUTGOING) {
             messenger.registerOutgoingPluginChannel(this, channel)
         }
 
-        logger.info("Listening on ${Channels.Jei.INCOMING.size} JEI and ${Channels.Rei.INCOMING.size} REI channels.")
+        logger.info("Listening on ${Channels.Jei.INCOMING.size} JEI and ${reiChannels.size} REI channels.")
     }
 }

@@ -66,13 +66,26 @@ object Channels {
          */
         const val MOVE_ITEMS = "roughlyenoughitems:move_items_new"
 
-        val INCOMING = listOf(
+        /**
+         * REI's cheat channels.
+         *
+         * Registering all of `create_item`, `create_item_grab` and `delete_item` makes REI's
+         * `canUsePackets` return true, which it reads as "this server runs REI" — and a server
+         * running REI is expected to push REI's own display sync, so REI then *discards* every
+         * recipe-book entry it is sent and falls back to the client's local recipes. Advertising
+         * these therefore costs the server's recipes.
+         */
+        val CHEAT_INCOMING = listOf(
             DELETE_ITEM,
             CREATE_ITEM,
             CREATE_ITEM_GRAB,
             CREATE_ITEM_HOTBAR,
-            MOVE_ITEMS,
         )
+
+        /** Recipe transfer is gated separately and is safe to advertise on its own. */
+        val TRANSFER_INCOMING = listOf(MOVE_ITEMS)
+
+        val INCOMING = CHEAT_INCOMING + TRANSFER_INCOMING
 
         /**
          * REI's namespace. A client announces only the channels it can *receive*, which are REI's

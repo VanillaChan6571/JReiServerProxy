@@ -63,6 +63,17 @@ cheat-mode:
   # With this off, only players with jreiproxyserver.cheat can (OP by default).
   allow-creative: false
 
+  # Advertise REI's cheat channels.
+  #
+  # This is off by default because it costs the server's recipes. REI decides whether a server
+  # "has REI" by whether it accepts all three of create_item, create_item_grab and delete_item,
+  # and a server running REI is expected to push REI's own display sync — so once these are
+  # advertised, REI discards every recipe-book entry it is sent and shows the client's own local
+  # recipes instead. JEI is unaffected, and REI's recipe transfer works either way.
+  #
+  # Turn this on only if REI cheat mode matters more to you than REI showing the server's recipes.
+  rei-channels: false
+
 # Recipe transfer: the "+" button that fills a crafting grid from the player's inventory.
 recipe-transfer:
   # Master switch. REI decides whether to offer the button from whether the server registered its

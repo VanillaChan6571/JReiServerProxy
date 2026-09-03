@@ -133,6 +133,9 @@ class RecipeSyncService(
             LoaderChannel.NEOFORGE -> {
                 val payload = cache.neoForgePayload
                 if (payload.recipes > 0) {
+                    // Tags first: the holder sets inside these recipes name tags the client
+                    // resolves while decoding them.
+                    handle.sendPacket(buildTagsPacket())
                     handle.sendRawPayload(Channels.Loader.NEOFORGE_RECIPE_CONTENT, payload.bytes)
                     recipesSent = payload.recipes
                     neoForgeCount.incrementAndGet()
