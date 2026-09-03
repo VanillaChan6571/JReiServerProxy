@@ -134,9 +134,6 @@ class RecipeSyncService(
                 val payload = cache.neoForgePayload
                 if (payload.recipes > 0) {
                     handle.sendRawPayload(Channels.Loader.NEOFORGE_RECIPE_CONTENT, payload.bytes)
-                    // The holders reference item tags the client resolves as it decodes them, so
-                    // the tag set has to be current before the recipes land.
-                    handle.sendPacket(buildTagsPacket())
                     recipesSent = payload.recipes
                     neoForgeCount.incrementAndGet()
                     if (config.debug) {
@@ -158,6 +155,10 @@ class RecipeSyncService(
 
         var recipeBookSent = 0
         if (shouldSendRecipeBook(player) && cache.recipeBookAddPackets.isNotEmpty()) {
+            // Recipes and recipe-book entries both name item tags, which the client resolves as it
+            // decodes them and cannot recover from missing. Refreshing the tag set first means every
+            // tag any recipe mentions is already known, rather than only those vanilla had sent.
+            handle.sendPacket(buildTagsPacket())
             cache.recipeBookRemovePackets.forEach(handle::sendPacket)
             cache.recipeBookAddPackets.forEach(handle::sendPacket)
             recipeBookSent = cache.recipeBookEntries

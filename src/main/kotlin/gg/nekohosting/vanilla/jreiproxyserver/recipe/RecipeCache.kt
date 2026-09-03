@@ -77,7 +77,7 @@ class RecipeCache {
      * Runs on the server's main or global region thread: it touches the recipe manager and the
      * registries. The result is published as a single snapshot when everything is encoded.
      */
-    fun rebuild(blacklist: Set<String>) {
+    fun rebuild(blacklist: Set<String>, stripCraftingRequirements: Boolean = false) {
         val server = minecraftServer
         val recipeManager = server.recipeManager
         val registries = server.registryAccess()
@@ -97,7 +97,7 @@ class RecipeCache {
         }
 
         val fabric = buildFabricPayload(kept, registries)
-        val recipeBook = buildRecipeBookPackets(kept, registries)
+        val recipeBook = buildRecipeBookPackets(kept, registries, stripCraftingRequirements)
 
         snapshot = Snapshot(
             recipeCount = kept.size,
@@ -204,12 +204,16 @@ class RecipeCache {
      * recipes. Nothing is unlocked server-side by this: the server still checks what a player
      * actually knows when they click a recipe.
      */
-    private fun buildRecipeBookPackets(holders: List<RecipeHolder<*>>, registries: RegistryAccess): RecipeBookResult {
+    private fun buildRecipeBookPackets(
+        holders: List<RecipeHolder<*>>,
+        registries: RegistryAccess,
+        stripCraftingRequirements: Boolean,
+    ): RecipeBookResult {
         val recipeManager = minecraftServer.recipeManager
         val displays = ArrayList<RecipeDisplayEntry>()
         for (holder in holders) {
             recipeManager.listDisplaysForRecipe(holder.id) { display ->
-                displays.add(withoutCraftingRequirements(display))
+                displays.add(if (stripCraftingRequirements) withoutCraftingRequirements(display) else display)
             }
         }
 
@@ -262,9 +266,10 @@ class RecipeCache {
      *
      * That field is the only part of a recipe-book entry whose decoding makes the client resolve an
      * item tag, and it does so with no fallback: an unknown tag throws and the client drops the
-     * connection. Vanilla never trips over it because it only ever sends the handful of recipes a
-     * player has unlocked. Nothing is lost here — the field only drives the vanilla book's "can I
-     * craft this" shading, and recipe viewers read the display itself.
+     * connection. Dropping it avoids that, at a cost — `RecipeDisplayEntry.canCraft` returns false
+     * whenever the field is absent, so every recipe reads as uncraftable and the book renders its
+     * ingredients blank even when the player is holding them. Only worth trading away on a server
+     * whose tags actually kick clients.
      */
     private fun withoutCraftingRequirements(display: RecipeDisplayEntry): RecipeDisplayEntry =
         RecipeDisplayEntry(display.id, display.display, display.group, display.category, Optional.empty())

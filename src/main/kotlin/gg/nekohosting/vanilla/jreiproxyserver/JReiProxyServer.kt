@@ -120,7 +120,7 @@ class JReiProxyServer : JavaPlugin() {
 
     /** Re-reads and re-encodes the server's recipes. Cheap enough to run on a reload, not per join. */
     fun rebuildRecipeCache() {
-        recipeCache.rebuild(pluginConfig.recipeBlacklist)
+        recipeCache.rebuild(pluginConfig.recipeBlacklist, pluginConfig.stripCraftingRequirements)
 
         console("plugin.cached-recipes", recipeCache.recipeCount, recipeCache.blacklistedCount)
         recipeCache.countsByType.forEach { (type, count) ->

@@ -34,6 +34,14 @@ recipe-sync:
   # recipes. With this off the recipes still arrive, but JEI keeps showing the client's defaults.
   trigger-recipe-update: true
 
+  # Leave the crafting requirements out of the recipe-book entries.
+  # That field is the only part whose decoding makes the client resolve an item tag, with no
+  # fallback: an unknown tag throws and the client is dropped. Turning this on avoids that, but the
+  # vanilla recipe book then treats every recipe as uncraftable and draws its ingredients blank,
+  # because the client works that out from the very field being removed. Only turn it on if clients
+  # are actually being kicked while the recipes are sent.
+  strip-crafting-requirements: false
+
   # Cooldown between uses of /jei and /rei, in seconds.
   # Each resend is the whole recipe set plus the recipe book, so it is not cheap. Players with
   # jreiproxyserver.admin are exempt. Set to 0 to remove the limit.

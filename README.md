@@ -60,6 +60,7 @@ Operators:
 | `recipe-sync.on-datapack-reload` | Re-encode and resend after `/reload`. |
 | `recipe-sync.recipe-book` | Who gets the full recipe book: `auto` (clients reporting REI), `all`, or `off`. |
 | `recipe-sync.trigger-recipe-update` | Send the packet that makes an already-loaded viewer re-read the recipes. Off means recipes still arrive but JEI keeps showing client defaults. |
+| `recipe-sync.strip-crafting-requirements` | Leave crafting requirements out of recipe-book entries. Avoids a client being dropped over an unresolvable item tag, at the cost of the vanilla recipe book treating every recipe as uncraftable and drawing its ingredients blank. Off by default; only worth turning on if clients are actually being kicked. |
 | `recipe-sync.player-resync-cooldown-seconds` | Seconds a player must wait between `/jei` resyncs. `0` disables the limit. |
 | `recipe-sync.notify-player` | Tell the player in chat once the recipes have arrived, so JEI's earlier warning reads as out of date. Wording lives in `lang/`. |
 | `cheat-mode.enabled` | Master switch for cheat mode. |
