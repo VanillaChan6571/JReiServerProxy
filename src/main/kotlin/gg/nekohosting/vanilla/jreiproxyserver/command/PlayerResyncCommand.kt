@@ -53,8 +53,14 @@ class PlayerResyncCommand(private val plugin: JReiProxyServer) : CommandExecutor
         plugin.connectionListener.forgetSync(player)
         val result = plugin.recipeSyncService.sync(player)
         if (result.sentAnything) {
+            val key = if (result.reiDisplaysSent > 0) "command.resync.self-rei" else "command.resync.self"
             player.sendMessage(
-                plugin.localeManager.component("command.resync.self", result.recipesSent, result.recipeBookEntriesSent)
+                plugin.localeManager.component(
+                    key,
+                    result.recipesSent,
+                    result.recipeBookEntriesSent,
+                    result.reiDisplaysSent,
+                )
             )
         } else {
             player.sendMessage(plugin.localeManager.component("command.resync.self-nothing"))

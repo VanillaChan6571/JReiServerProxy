@@ -63,23 +63,22 @@ cheat-mode:
   # With this off, only players with jreiproxyserver.cheat can (OP by default).
   allow-creative: false
 
-  # Advertise the three REI cheat channels that make REI ignore the server's recipes.
+  # Enable REI's three full cheat channels and its matching server display sync.
   #
   # REI decides whether a server "has REI" by whether it accepts all three of create_item,
-  # create_item_grab and delete_item, and a server running REI is expected to push REI's own
-  # display sync — so once these are advertised, REI discards every recipe-book entry it is sent
-  # and shows the client's own local recipes instead. Advertising only some of them buys nothing;
-  # REI sends none of the three unless all three exist.
+  # create_item_grab and delete_item. Once they are advertised, REI ignores vanilla recipe-book
+  # packets and expects roughlyenoughitems:sync_displays. The 1.21.11 build now sends that display
+  # list, so server recipes and complete item components (including light-block level) both work.
   #
   # What still works with this off:
   #   - REI recipe transfer (the "+" button), which REI gates separately
   #   - REI hotbar cheat (hover an item, press a number key), also gated separately
-  #   - REI's give, for operators: REI falls back to running /give, which is logged as a command
-  #     and answers to the vanilla permission rather than jreiproxyserver.cheat
-  # What does not: deleting the held item outside creative.
+  #   - REI's give for operators through its /give fallback, which loses item components, is logged
+  #     as a command, and uses the vanilla command permission instead of jreiproxyserver.cheat
+  # What does not work with this off: lossless inventory/cursor give and held-item deletion.
   #
-  # JEI is unaffected either way.
-  rei-channels: false
+  # Requires recipe-sync.enabled. JEI is unaffected either way.
+  rei-channels: true
 
 # Recipe transfer: the "+" button that fills a crafting grid from the player's inventory.
 recipe-transfer:

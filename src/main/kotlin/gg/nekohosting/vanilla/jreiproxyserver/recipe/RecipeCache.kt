@@ -3,6 +3,7 @@ package gg.nekohosting.vanilla.jreiproxyserver.recipe
 import gg.nekohosting.vanilla.jreiproxyserver.nms.copyBytes
 import gg.nekohosting.vanilla.jreiproxyserver.nms.minecraftServer
 import gg.nekohosting.vanilla.jreiproxyserver.nms.newBuf
+import gg.nekohosting.vanilla.jreiproxyserver.network.rei.ReiDisplaySyncEncoder
 import net.minecraft.core.RegistryAccess
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
@@ -17,6 +18,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.display.RecipeDisplayEntry
 import java.util.Optional
+import java.util.logging.Logger
 
 /**
  * The recipe data the plugin sends, encoded once per datapack state and reused for every player.
@@ -24,7 +26,7 @@ import java.util.Optional
  * Nothing here is player-specific: the payloads carry the server's numeric registry ids, which are
  * the same for every client on the server's own Minecraft version.
  */
-class RecipeCache {
+class RecipeCache(private val logger: Logger) {
 
     /** One encoded loader payload. */
     class Payload(val bytes: ByteArray, val recipes: Int, val groups: Int) {
@@ -47,6 +49,7 @@ class RecipeCache {
         val skippedRecipeCount: Int = 0,
         val fabricPayload: Payload = EMPTY,
         val neoForgePayload: Payload = EMPTY,
+        val reiDisplayPayload: ReiDisplaySyncEncoder.Result = EMPTY_REI,
         val recipeBookAddPackets: List<Packet<*>> = emptyList(),
         val recipeBookRemovePackets: List<Packet<*>> = emptyList(),
         val recipeBookEntries: Int = 0,
@@ -66,6 +69,7 @@ class RecipeCache {
 
     val fabricPayload: Payload get() = snapshot.fabricPayload
     val neoForgePayload: Payload get() = snapshot.neoForgePayload
+    val reiDisplayPayload: ReiDisplaySyncEncoder.Result get() = snapshot.reiDisplayPayload
 
     val recipeBookAddPackets: List<Packet<*>> get() = snapshot.recipeBookAddPackets
     val recipeBookRemovePackets: List<Packet<*>> get() = snapshot.recipeBookRemovePackets
@@ -97,6 +101,7 @@ class RecipeCache {
         }
 
         val fabric = buildFabricPayload(kept, registries)
+        val reiDisplays = ReiDisplaySyncEncoder(registries, logger).encode(kept)
         val recipeBook = buildRecipeBookPackets(kept, registries, stripCraftingRequirements)
 
         snapshot = Snapshot(
@@ -107,6 +112,7 @@ class RecipeCache {
             skippedRecipeCount = fabric.skippedRecipes,
             fabricPayload = fabric.payload,
             neoForgePayload = buildNeoForgePayload(kept, registries),
+            reiDisplayPayload = reiDisplays,
             recipeBookAddPackets = recipeBook.add,
             recipeBookRemovePackets = recipeBook.remove,
             recipeBookEntries = recipeBook.entries,
@@ -288,5 +294,6 @@ class RecipeCache {
         private const val RECIPE_BOOK_BATCH_BYTES = 512 * 1024
 
         private val EMPTY = Payload(ByteArray(0), 0, 0)
+        private val EMPTY_REI = ReiDisplaySyncEncoder.Result(ByteArray(0), 0, 0, 0, emptySet())
     }
 }

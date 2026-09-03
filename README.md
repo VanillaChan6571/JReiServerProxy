@@ -15,11 +15,11 @@ This plugin sends them the way a mod loader would. No client mod, no mod loader 
 
 ## What it does
 
-**Recipe sync.** The server's recipes are encoded once and sent to each player on whichever channel their client can read: `fabric:recipe_sync` for Fabric, `neoforge:recipe_content` for NeoForge. REI ignores both and builds its list from the recipe book, so REI clients are sent the full recipe book instead.
+**Recipe sync.** The server's recipes are encoded once and sent to each player on whichever channel their client can read: `fabric:recipe_sync` for Fabric, `neoforge:recipe_content` for NeoForge. REI normally builds its list from the recipe book. In the 1.21.11 build, enabling the full REI cheat channels switches REI to its own version-pinned `sync_displays` list instead, because REI deliberately ignores recipe-book packets while those channels are present.
 
 JEI builds its list the moment the server's own recipe packet arrives, which is before any plugin can send anything, so it prints its warning once and then reloads with the server's recipes a moment later. The warning is unavoidable and does not mean the sync failed; `recipe-sync.notify-player` follows it with a line saying so.
 
-**Cheat mode.** Pulling an item out of the list, deleting the held item, and setting a hotbar slot. Fully available for JEI. For REI, the hotbar and transfer channels are advertised by default because REI gates them on their own, while the three channels that would make REI discard the server's recipes are opt-in (see `cheat-mode.rei-channels`). Gated on the `jreiproxyserver.cheat` permission, and reported back to the client so JEI's own refusal message is accurate.
+**Cheat mode.** Pulling an item out of the list, deleting the held item, and setting a hotbar slot. Fully available for JEI. The 1.21.11 build also enables all three REI cheat channels by default and pairs them with REI display sync, preserving complete item components such as a light block's level. Turning `cheat-mode.rei-channels` off keeps transfer and hotbar packets but sends normal REI grabs through its `/give` fallback, which loses components. Cheat packets handled by the plugin are gated on `jreiproxyserver.cheat`.
 
 **Recipe transfer.** The "+" button that fills a crafting grid from the player's inventory, for both JEI (`recipe_transfer`, `recipe_transfer_counted`) and REI (`move_items_new`). Each mod's own server-side algorithm is reimplemented rather than approximated: the client decides which slots to use, but the server picks the items and moves them, so a stale client view cannot duplicate or void anything. REI decides whether to offer the button purely from whether the server registered its channel, so it is only advertised while `recipe-transfer.enabled` is on.
 
@@ -27,7 +27,9 @@ JEI builds its list the moment the server's own recipe packet arrives, which is 
 
 ## Versioning
 
-The version is the Minecraft version this is built for, plus a plugin revision: `26.2.0` is the first release for Minecraft 26.2, `1.21.11.0` the first for 1.21.11. The version number is therefore also the compatibility statement.
+The version is the Minecraft version this is built for, plus a plugin revision: `26.2.0` is the first release for Minecraft 26.2, while `1.21.11.2` is the 1.21.11 build with REI display sync. The version number is therefore also the compatibility statement.
+
+The REI display protocol is version-pinned. This implementation is only in `1.21.11.2`; the 26.2 build needs its own separately tested encoder before it can enable the same full-channel path.
 
 There is one jar per Minecraft version because there has to be. The same source compiles against
 both, but the server classes it encodes recipes through change shape between releases —
@@ -70,7 +72,7 @@ Operators:
 | `recipe-sync.player-resync-cooldown-seconds` | Seconds a player must wait between `/jei` resyncs. `0` disables the limit. |
 | `recipe-sync.notify-player` | Tell the player in chat once the recipes have arrived, so JEI's earlier warning reads as out of date. Wording lives in `lang/`. |
 | `cheat-mode.enabled` | Master switch for cheat mode. |
-| `cheat-mode.rei-channels` | Advertise the three REI cheat channels that make REI ignore the server's recipes. Off by default: REI treats a server accepting all three as running REI itself and discards the recipe book it is sent. With it off, REI recipe transfer and hotbar cheat still work, and operators still get REI's give through its `/give` fallback; only deleting the held item is lost. JEI is unaffected. |
+| `cheat-mode.rei-channels` | In the 1.21.11 build, enable the three full REI cheat channels together with REI's matching display sync. On by default and requires `recipe-sync.enabled`; this keeps server recipes while preserving full item components for inventory/cursor grabs and enables held-item deletion. With it off, transfer and hotbar cheat still work, but REI's `/give` fallback loses item components. JEI is unaffected. |
 | `cheat-mode.allow-creative` | Also let any creative-mode player cheat, regardless of permission. |
 | `recipe-transfer.enabled` | Master switch for the "+" button. |
 | `recipe-blacklist` | Recipe ids (`namespace:key`) to leave out of everything sent. |
@@ -90,11 +92,11 @@ nobody has yet run it under regionised threading.
 
 ### Notes
 
-Sending the whole recipe book makes the vanilla recipe book list everything as known. Nothing is unlocked server-side and it is not an exploit — the server still checks what a player knows when they click a recipe.
+Sending the whole recipe book makes the vanilla recipe book list everything as known. Nothing is unlocked server-side and it is not an exploit — the server still checks what a player knows when they click a recipe. REI clients using the 1.21.11 display-sync path do not need this recipe-book workaround.
 
 Recipes carry the server's internal numeric registry ids, which change with every Minecraft version. A player on a different version than the server cannot decode them. If you run ViaVersion, expect recipe sync to work only for players on the server's own version.
 
-REI's packets travel inside Architectury's split-packet framing, which prefixes a state byte to every payload and splits anything over 32 KB across several messages. The plugin unwraps and reassembles that before reading any REI packet.
+REI's packets travel inside Architectury's split-packet framing, which prefixes a state byte to every payload. Client-to-server packets split above roughly 32 KB; server-to-client packets such as `sync_displays` split above roughly 1 MiB. The plugin handles both directions.
 
 The Fabric payload only carries recipes whose serializer is in the `minecraft` namespace. Fabric's decoder discards the entire payload on meeting a serializer the client did not opt into, and that opt-in list arrives in the configuration phase, which a plugin cannot see. Anything skipped is reported in the startup log.
 

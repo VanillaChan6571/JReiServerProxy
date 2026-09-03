@@ -49,7 +49,8 @@ SOFTWARE.
 The server side of REI's recipe transfer is a port of `InputSlotCrafter`, `NewInputSlotCrafter` and
 `RecipeFinder`, in `network/rei/ReiTransfer.kt` and `network/rei/RecipeFinder.kt`. REI's ingredient
 matcher is in turn derived from Minecraft's own recipe-book placement algorithm. The transfer
-payload format and slot-accessor NBT shape were taken from REI's sources.
+payload format, slot-accessor NBT shape, display-sync envelope and vanilla display serializer
+layouts were taken from REI's sources.
 
 ```
 MIT License

@@ -51,7 +51,7 @@ data class PluginConfig(
             playerResyncCooldownSeconds = config.getInt("recipe-sync.player-resync-cooldown-seconds", 30),
             cheatEnabled = config.getBoolean("cheat-mode.enabled", true),
             cheatAllowCreative = config.getBoolean("cheat-mode.allow-creative", false),
-            reiCheatChannels = config.getBoolean("cheat-mode.rei-channels", false),
+            reiCheatChannels = config.getBoolean("cheat-mode.rei-channels", true),
             recipeTransferEnabled = config.getBoolean("recipe-transfer.enabled", true),
             recipeBlacklist = config.getStringList("recipe-blacklist").toSet(),
             debug = config.getBoolean("debug", false),

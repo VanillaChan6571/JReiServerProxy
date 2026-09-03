@@ -10,6 +10,7 @@ command:
     skipped: "&e{0} has no recipe viewer that the server can send to."
     self-usage: "&cUsage: /{0} [resync|retry]"
     self: "&aRecipes resent: &f{0}&a recipes, &f{1}&a recipe-book entries."
+    self-rei: "&aRecipes resent: &f{0}&a loader recipes, &f{2}&a REI displays."
     self-nothing: "&eYour client did not register a recipe viewer the server can send to."
     cooldown: "&ePlease wait {0}s before asking for the recipes again."
     disabled: "&cRecipe sync is disabled on this server."
@@ -18,7 +19,9 @@ command:
     recipes: "&7Recipes: &f{0} &7({1} hidden by the blacklist)"
     payloads: "&7Payload size: &fFabric {0} KB&7, &fNeoForge {1} KB"
     recipe-book: "&7Recipe book: &f{0} entries in {1} packet(s), mode {2}"
+    rei-displays: "&7REI display sync: &f{0} displays ({1} KB) across {2} serializers"
     players: "&7Synced players: &f{0} Fabric&7, &f{1} NeoForge&7, &f{2} recipe book"
+    rei-players: "&7REI display syncs: &f{0} players"
     disabled: "&cRecipe sync is disabled in the configuration."
   help-header: "&6--- JReiProxyServer Help ---"
   help-reload: "&a/jeiproxy reload &f- Reloads the plugin configuration."
@@ -35,8 +38,10 @@ plugin:
   cached-recipes: "&aCached {0} recipes. ({1} ignored from blacklist)"
   found-recipes: "&7- Found {0} {1} recipes."
   payload-sizes: "&7- Payloads: &fFabric {0} KB&7, &fNeoForge {1} KB&7, recipe book &f{2}&7 entries in &f{3}&7 packet(s)."
+  rei-display-payload: "&7- REI display sync: &f{0}&7 displays, &f{1} KB&7 across &f{2}&7 serializers."
   sync-disabled: "&eRecipe sync is disabled; JEI clients will show their own built-in recipes."
   skipped-serializers: "&eSkipped {0} recipes from non-vanilla serializers: {1}"
+  skipped-rei-displays: "&eSkipped {0} displays that cannot be represented in REI 1.21.11: {1}"
   reloaded: "Configuration reloaded: recipe-sync={0}, {1} recipes blacklisted."
 
 sync:
@@ -44,6 +49,7 @@ sync:
   sent-fabric: "Sent {0} recipes ({1} KB) to {2} over the Fabric recipe channel."
   sent-neoforge: "Sent {0} recipes ({1} KB) to {2} over the NeoForge recipe channel."
   sent-recipe-book: "Sent {0} recipe-book entries to {1}."
+  sent-rei-displays: "Sent {0} REI displays ({1} KB in {2} frame(s)) to {3}."
   no-channel: "{0} has no recipe channel the server can send on; JEI will show client recipes."
 
 cheat:

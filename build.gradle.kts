@@ -22,7 +22,7 @@ data class Target(val devBundle: String, val apiVersion: String, val pluginVersi
 val targets = mapOf(
     "26.2" to Target("26.2.build.121-stable", "26.2", "26.2.0"),
     // Folia's stable line, so this is the build Folia servers want until 26.2 leaves beta.
-    "1.21.11" to Target("1.21.11-R0.1-SNAPSHOT", "1.21", "1.21.11.0"),
+    "1.21.11" to Target("1.21.11-R0.1-SNAPSHOT", "1.21", "1.21.11.2"),
 )
 
 val minecraftVersion = providers.gradleProperty("minecraft").getOrElse("26.2")
@@ -46,6 +46,8 @@ dependencies {
     // plugin needs the server internals, not just the Bukkit API.
     paperweight.paperDevBundle(target.devBundle)
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Minecraft 26.x class files are Java 25; 1.21.x needs only 21, and building it on 25 would emit
@@ -63,6 +65,10 @@ tasks {
 
     runServer {
         minecraftVersion(minecraftVersion)
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     processResources {

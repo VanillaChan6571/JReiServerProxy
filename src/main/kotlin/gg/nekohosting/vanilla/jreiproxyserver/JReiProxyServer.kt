@@ -56,7 +56,7 @@ class JReiProxyServer : JavaPlugin() {
         pluginConfig = PluginConfig.from(config)
         localeManager = LocaleManager(this)
 
-        recipeCache = RecipeCache()
+        recipeCache = RecipeCache(logger)
         recipeSyncService = RecipeSyncService(this, recipeCache)
         connectionListener = PlayerConnectionListener(this)
 
@@ -112,6 +112,10 @@ class JReiProxyServer : JavaPlugin() {
         reloadConfig()
         pluginConfig = PluginConfig.from(config)
         localeManager.loadLocales()
+        // The REI cheat trio changes what the client believes this server supports. Rebuild the
+        // messenger registrations along with the configuration so `/jreiproxy reload` cannot
+        // leave the advertised channels and the recipe path disagreeing.
+        registerChannels()
         console("plugin.reloaded", pluginConfig.syncEnabled, pluginConfig.recipeBlacklist.size)
 
         console("plugin.recaching-recipes")
@@ -133,6 +137,19 @@ class JReiProxyServer : JavaPlugin() {
             recipeCache.recipeBookEntries,
             recipeCache.recipeBookAddPackets.size,
         )
+        console(
+            "plugin.rei-display-payload",
+            recipeCache.reiDisplayPayload.displays,
+            recipeCache.reiDisplayPayload.kilobytes,
+            recipeCache.reiDisplayPayload.serializers,
+        )
+        if (recipeCache.reiDisplayPayload.skippedDisplays > 0) {
+            warn(
+                "plugin.skipped-rei-displays",
+                recipeCache.reiDisplayPayload.skippedDisplays,
+                recipeCache.reiDisplayPayload.skippedTypes.joinToString(", "),
+            )
+        }
         if (recipeCache.skippedSerializers.isNotEmpty()) {
             warn(
                 "plugin.skipped-serializers",
@@ -167,16 +184,25 @@ class JReiProxyServer : JavaPlugin() {
         val listener = ViewerPacketListener(this).also { packetListener = it }
         val messenger = server.messenger
 
-        // REI's cheat channels are only advertised when asked for: their presence makes REI throw
-        // away the recipes this plugin exists to deliver. Transfer is gated separately by REI and
-        // is always safe.
+        messenger.unregisterIncomingPluginChannel(this)
+        messenger.unregisterOutgoingPluginChannel(this)
+
+        // REI ignores recipe-book packets when the full cheat trio is present. When enabled, the
+        // sync service supplies the same recipes over REI's own sync_displays channel instead.
         val reiChannels = Channels.Rei.SAFE_INCOMING +
-            if (pluginConfig.reiCheatChannels) Channels.Rei.CHEAT_TRIO_INCOMING else emptyList()
+            if (pluginConfig.reiCheatChannels && pluginConfig.syncEnabled) {
+                Channels.Rei.CHEAT_TRIO_INCOMING
+            } else {
+                emptyList()
+            }
 
         for (channel in Channels.Jei.INCOMING + reiChannels) {
             messenger.registerIncomingPluginChannel(this, channel, listener)
         }
         for (channel in Channels.Jei.OUTGOING) {
+            messenger.registerOutgoingPluginChannel(this, channel)
+        }
+        for (channel in Channels.Rei.OUTGOING) {
             messenger.registerOutgoingPluginChannel(this, channel)
         }
 

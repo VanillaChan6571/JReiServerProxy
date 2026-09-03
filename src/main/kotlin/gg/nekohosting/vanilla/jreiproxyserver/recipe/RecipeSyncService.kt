@@ -3,6 +3,7 @@ package gg.nekohosting.vanilla.jreiproxyserver.recipe
 import gg.nekohosting.vanilla.jreiproxyserver.JReiProxyServer
 import gg.nekohosting.vanilla.jreiproxyserver.config.RecipeBookMode
 import gg.nekohosting.vanilla.jreiproxyserver.network.Channels
+import gg.nekohosting.vanilla.jreiproxyserver.network.rei.ReiSplitPacketFramer
 import gg.nekohosting.vanilla.jreiproxyserver.nms.minecraftServer
 import gg.nekohosting.vanilla.jreiproxyserver.nms.nms
 import gg.nekohosting.vanilla.jreiproxyserver.nms.sendPacket
@@ -26,8 +27,9 @@ data class SyncResult(
     val channel: LoaderChannel,
     val recipesSent: Int,
     val recipeBookEntriesSent: Int,
+    val reiDisplaysSent: Int = 0,
 ) {
-    val sentAnything: Boolean get() = recipesSent > 0 || recipeBookEntriesSent > 0
+    val sentAnything: Boolean get() = recipesSent > 0 || recipeBookEntriesSent > 0 || reiDisplaysSent > 0
 }
 
 /**
@@ -47,10 +49,12 @@ class RecipeSyncService(
     private val fabricCount = AtomicInteger()
     private val neoForgeCount = AtomicInteger()
     private val recipeBookCount = AtomicInteger()
+    private val reiDisplayCount = AtomicInteger()
 
     val fabricSynced: Int get() = fabricCount.get()
     val neoForgeSynced: Int get() = neoForgeCount.get()
     val recipeBookSynced: Int get() = recipeBookCount.get()
+    val reiDisplaySynced: Int get() = reiDisplayCount.get()
 
     /**
      * Whether the player is running something that wants recipes.
@@ -66,6 +70,9 @@ class RecipeSyncService(
 
     fun hasReiChannels(player: Player): Boolean =
         player.listeningPluginChannels.any { it.startsWith(Channels.Rei.NAMESPACE) }
+
+    private fun canReceiveReiDisplays(player: Player): Boolean =
+        Channels.Rei.SYNC_DISPLAYS in player.listeningPluginChannels
 
     fun loaderChannel(player: Player): LoaderChannel {
         val channels = player.listeningPluginChannels
@@ -85,10 +92,16 @@ class RecipeSyncService(
         }
     }
 
-    private fun shouldSendRecipeBook(player: Player): Boolean = when (plugin.pluginConfig.recipeBookMode) {
-        RecipeBookMode.OFF -> false
-        RecipeBookMode.ALL -> hasRecipeViewer(player)
-        RecipeBookMode.AUTO -> hasReiChannels(player)
+    private fun shouldSendReiDisplays(player: Player): Boolean =
+        plugin.pluginConfig.reiCheatChannels && canReceiveReiDisplays(player)
+
+    private fun shouldSendRecipeBook(player: Player): Boolean {
+        if (shouldSendReiDisplays(player)) return false
+        return when (plugin.pluginConfig.recipeBookMode) {
+            RecipeBookMode.OFF -> false
+            RecipeBookMode.ALL -> hasRecipeViewer(player)
+            RecipeBookMode.AUTO -> hasReiChannels(player)
+        }
     }
 
     /** Sends the server's recipes to one player. Must run on the main thread. */
@@ -109,7 +122,8 @@ class RecipeSyncService(
                 .sorted()
             plugin.logger.info(
                 "[debug] ${player.name}: brand=${player.clientBrandName}, channel=$channel, " +
-                    "recipeBook=${shouldSendRecipeBook(player)}, registered=$viewerChannels"
+                    "recipeBook=${shouldSendRecipeBook(player)}, reiDisplays=${shouldSendReiDisplays(player)}, " +
+                    "registered=$viewerChannels"
             )
         }
 
@@ -157,7 +171,25 @@ class RecipeSyncService(
         }
 
         var recipeBookSent = 0
-        if (shouldSendRecipeBook(player) && cache.recipeBookAddPackets.isNotEmpty()) {
+        var reiDisplaysSent = 0
+        if (shouldSendReiDisplays(player) && cache.reiDisplayPayload.displays > 0) {
+            val payload = cache.reiDisplayPayload
+            val frames = ReiSplitPacketFramer.frame(Channels.Rei.SYNC_DISPLAYS, payload.bytes)
+            frames.forEach { handle.sendRawPayload(Channels.Rei.SYNC_DISPLAYS, it) }
+            reiDisplaysSent = payload.displays
+            reiDisplayCount.incrementAndGet()
+            if (config.debug) {
+                plugin.logger.info(
+                    plugin.localeManager.plain(
+                        "sync.sent-rei-displays",
+                        payload.displays,
+                        payload.kilobytes,
+                        frames.size,
+                        player.name,
+                    )
+                )
+            }
+        } else if (shouldSendRecipeBook(player) && cache.recipeBookAddPackets.isNotEmpty()) {
             // Recipes and recipe-book entries both name item tags, which the client resolves as it
             // decodes them and cannot recover from missing. Refreshing the tag set first means every
             // tag any recipe mentions is already known, rather than only those vanilla had sent.
@@ -176,11 +208,13 @@ class RecipeSyncService(
         // Order is load-bearing: this makes the client rebuild its recipe container from what it
         // currently holds, so the payload above has to have been handled by the time it arrives.
         // Sending it first would carry the old, empty recipe set forward.
+        // DisplaySyncPacket schedules its own REI registry update. This vanilla packet is only the
+        // nudge needed after loader or recipe-book data and can race REI's queued display job.
         if (config.triggerRecipeUpdate && (recipesSent > 0 || recipeBookSent > 0)) {
             handle.sendPacket(cache.buildRecipeUpdatePacket())
         }
 
-        val result = SyncResult(channel, recipesSent, recipeBookSent)
+        val result = SyncResult(channel, recipesSent, recipeBookSent, reiDisplaysSent)
 
         // JEI has already printed "this server does not provide recipes" by now — it builds its
         // list the moment the vanilla recipe packet arrives, before a plugin may send anything.
