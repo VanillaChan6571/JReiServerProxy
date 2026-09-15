@@ -19,7 +19,6 @@ import net.minecraft.world.item.crafting.display.RecipeDisplay
 import net.minecraft.world.item.crafting.display.ShapedCraftingRecipeDisplay
 import net.minecraft.world.item.crafting.display.ShapelessCraftingRecipeDisplay
 import net.minecraft.world.item.crafting.display.SlotDisplay
-import net.minecraft.world.item.crafting.display.SlotDisplayContext
 import net.minecraft.world.item.crafting.display.SmithingRecipeDisplay
 import net.minecraft.world.item.crafting.display.StonecutterRecipeDisplay
 import net.minecraft.world.item.equipment.trim.TrimPattern
@@ -36,6 +35,7 @@ import java.util.logging.Logger
 class ReiDisplaySyncEncoder(
     private val registries: RegistryAccess,
     private val logger: Logger,
+    private val slotContext: ContextMap,
 ) {
 
     data class Result(
@@ -50,10 +50,6 @@ class ReiDisplaySyncEncoder(
         /** Safe to pair with the cheat trio without making REI discard any unsupported display. */
         val complete: Boolean get() = bytes.isNotEmpty() && skippedDisplays == 0
     }
-
-    private val slotContext = ContextMap.Builder()
-        .withParameter(SlotDisplayContext.REGISTRIES, registries)
-        .create(SlotDisplayContext.CONTEXT)
 
     fun encode(holders: List<RecipeHolder<*>>): Result {
         val displays = ArrayList<WireDisplay>()

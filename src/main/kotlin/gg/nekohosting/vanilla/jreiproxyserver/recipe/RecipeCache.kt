@@ -17,6 +17,7 @@ import net.minecraft.world.item.crafting.RecipeHolder
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.display.RecipeDisplayEntry
+import net.minecraft.world.item.crafting.display.SlotDisplayContext
 import java.util.Optional
 import java.util.logging.Logger
 
@@ -101,7 +102,9 @@ class RecipeCache(private val logger: Logger) {
         }
 
         val fabric = buildFabricPayload(kept, registries)
-        val reiDisplays = ReiDisplaySyncEncoder(registries, logger).encode(kept)
+        // Let Minecraft construct the context: the builder API changed in 26.3.
+        val slotContext = SlotDisplayContext.fromLevel(server.overworld())
+        val reiDisplays = ReiDisplaySyncEncoder(registries, logger, slotContext).encode(kept)
         val recipeBook = buildRecipeBookPackets(kept, registries, stripCraftingRequirements)
 
         snapshot = Snapshot(
