@@ -7,6 +7,7 @@ import gg.nekohosting.vanilla.jreiproxyserver.config.ResourceBackfill
 import gg.nekohosting.vanilla.jreiproxyserver.i18n.LocaleManager
 import gg.nekohosting.vanilla.jreiproxyserver.listener.PlayerConnectionListener
 import gg.nekohosting.vanilla.jreiproxyserver.network.Channels
+import gg.nekohosting.vanilla.jreiproxyserver.network.ClientVersionTracker
 import gg.nekohosting.vanilla.jreiproxyserver.network.ViewerPacketListener
 import gg.nekohosting.vanilla.jreiproxyserver.recipe.RecipeCache
 import gg.nekohosting.vanilla.jreiproxyserver.recipe.RecipeSyncService
@@ -37,6 +38,9 @@ class JReiProxyServer : JavaPlugin() {
     lateinit var connectionListener: PlayerConnectionListener
         private set
 
+    lateinit var clientVersionTracker: ClientVersionTracker
+        private set
+
     lateinit var packetListener: ViewerPacketListener
         private set
 
@@ -58,6 +62,7 @@ class JReiProxyServer : JavaPlugin() {
 
         recipeCache = RecipeCache(logger)
         recipeSyncService = RecipeSyncService(this, recipeCache)
+        clientVersionTracker = ClientVersionTracker(this)
         connectionListener = PlayerConnectionListener(this)
         packetListener = ViewerPacketListener(this)
 
@@ -198,6 +203,7 @@ class JReiProxyServer : JavaPlugin() {
         for (channel in Channels.Jei.INCOMING + reiChannels) {
             messenger.registerIncomingPluginChannel(this, channel, packetListener)
         }
+        messenger.registerIncomingPluginChannel(this, Channels.ViaVersion.PROXY_DETAILS, clientVersionTracker)
         for (channel in Channels.Jei.OUTGOING) {
             messenger.registerOutgoingPluginChannel(this, channel)
         }

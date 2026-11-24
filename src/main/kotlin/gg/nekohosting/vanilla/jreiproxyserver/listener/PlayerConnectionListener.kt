@@ -42,6 +42,7 @@ class PlayerConnectionListener(private val plugin: JReiProxyServer) : Listener {
     fun onQuit(event: PlayerQuitEvent) {
         synced.remove(event.player.uniqueId)
         scheduled.remove(event.player.uniqueId)
+        plugin.clientVersionTracker.onPlayerQuit(event.player)
         plugin.packetListener.onPlayerQuit(event.player)
         plugin.playerResyncCommand.forget(event.player)
     }
