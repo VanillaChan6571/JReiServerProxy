@@ -41,6 +41,7 @@ plugin:
   rei-display-payload: "&7- REI 显示同步: &f{0}&7 条, &f{1} KB&7, 共 &f{2}&7 种序列化器。"
   sync-disabled: "&e配方同步已关闭; JEI 客户端将显示自带的配方。"
   skipped-serializers: "&e已跳过 {0} 条来自非原版序列化器的配方: {1}"
+  skipped-neoforge-serializers: "&e已从 NeoForge 载荷跳过 {0} 条无法编码或未注册序列化器的配方: {1}"
   skipped-rei-displays: "&e已跳过 {0} 条无法用 REI 26.2 表示的显示: {1}"
   rei-cheat-fallback: "&e由于完整的 REI 显示同步不可用，未公布完整作弊通道；已保留配方安全回退。"
   reloaded: "配置已重载: recipe-sync={0}, 黑名单 {1} 条配方。"

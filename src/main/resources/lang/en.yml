@@ -41,6 +41,7 @@ plugin:
   rei-display-payload: "&7- REI display sync: &f{0}&7 displays, &f{1} KB&7 across &f{2}&7 serializers."
   sync-disabled: "&eRecipe sync is disabled; JEI clients will show their own built-in recipes."
   skipped-serializers: "&eSkipped {0} recipes from non-vanilla serializers: {1}"
+  skipped-neoforge-serializers: "&eSkipped {0} recipes from NeoForge payload due to unregistered or unencodable serializers: {1}"
   skipped-rei-displays: "&eSkipped {0} displays that cannot be represented in REI 26.2: {1}"
   rei-cheat-fallback: "&eREI full cheat channels were not advertised because a complete display sync is unavailable; the recipe-safe fallback remains active."
   reloaded: "Configuration reloaded: recipe-sync={0}, {1} recipes blacklisted."
