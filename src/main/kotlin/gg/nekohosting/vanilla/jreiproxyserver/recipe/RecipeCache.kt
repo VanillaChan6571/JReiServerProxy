@@ -48,6 +48,8 @@ class RecipeCache(private val logger: Logger) {
         val countsByType: Map<String, Int> = emptyMap(),
         val skippedSerializers: List<String> = emptyList(),
         val skippedRecipeCount: Int = 0,
+        val neoForgeSkippedSerializers: List<String> = emptyList(),
+        val neoForgeSkippedRecipeCount: Int = 0,
         val fabricPayload: Payload = EMPTY,
         val neoForgePayload: Payload = EMPTY,
         val reiDisplayPayload: ReiDisplaySyncEncoder.Result = EMPTY_REI,
@@ -67,6 +69,10 @@ class RecipeCache(private val logger: Logger) {
     /** Serializers dropped from the Fabric payload because the client would refuse the whole thing. */
     val skippedSerializers: List<String> get() = snapshot.skippedSerializers
     val skippedRecipeCount: Int get() = snapshot.skippedRecipeCount
+
+    /** Serializers dropped from the NeoForge payload because they lack a registry id or failed encoding. */
+    val neoForgeSkippedSerializers: List<String> get() = snapshot.neoForgeSkippedSerializers
+    val neoForgeSkippedRecipeCount: Int get() = snapshot.neoForgeSkippedRecipeCount
 
     val fabricPayload: Payload get() = snapshot.fabricPayload
     val neoForgePayload: Payload get() = snapshot.neoForgePayload
@@ -102,6 +108,7 @@ class RecipeCache(private val logger: Logger) {
         }
 
         val fabric = buildFabricPayload(kept, registries)
+        val neoForge = buildNeoForgePayload(kept, registries)
         // Let Minecraft construct the context: the builder API changed in 26.3.
         val slotContext = SlotDisplayContext.fromLevel(server.overworld())
         val reiDisplays = ReiDisplaySyncEncoder(registries, logger, slotContext).encode(kept)
@@ -113,8 +120,10 @@ class RecipeCache(private val logger: Logger) {
             countsByType = counts.toSortedMap(),
             skippedSerializers = fabric.skippedSerializers,
             skippedRecipeCount = fabric.skippedRecipes,
+            neoForgeSkippedSerializers = neoForge.skippedSerializers,
+            neoForgeSkippedRecipeCount = neoForge.skippedRecipes,
             fabricPayload = fabric.payload,
-            neoForgePayload = buildNeoForgePayload(kept, registries),
+            neoForgePayload = neoForge.payload,
             reiDisplayPayload = reiDisplays,
             recipeBookAddPackets = recipeBook.add,
             recipeBookRemovePackets = recipeBook.remove,
@@ -123,6 +132,8 @@ class RecipeCache(private val logger: Logger) {
     }
 
     private class FabricResult(val payload: Payload, val skippedSerializers: List<String>, val skippedRecipes: Int)
+
+    private class NeoForgeResult(val payload: Payload, val skippedSerializers: List<String>, val skippedRecipes: Int)
 
     private class RecipeBookResult(val add: List<Packet<*>>, val remove: List<Packet<*>>, val entries: Int)
 
@@ -180,26 +191,69 @@ class RecipeCache(private val logger: Logger) {
     }
 
     /**
-     * `neoforge:recipe_content`: the set of recipe types followed by every recipe holder. NeoForge
-     * decodes each holder's serializer by registry id, so unlike Fabric there is nothing to filter.
+     * `neoforge:recipe_content`: the set of recipe types followed by every recipe holder.
+     *
+     * NeoForge decodes each holder by numeric registry id, so plugins that wrap or inject recipes
+     * using unregistered `RecipeSerializer` or `RecipeType` instances (or custom recipes that fail
+     * stream encoding) must be skipped per entry rather than aborting the entire rebuild.
      */
-    private fun buildNeoForgePayload(holders: List<RecipeHolder<*>>, registries: RegistryAccess): Payload {
-        val types = LinkedHashSet<RecipeType<*>>()
-        for (holder in holders) {
-            types.add(holder.value().type)
+    private fun buildNeoForgePayload(holders: List<RecipeHolder<*>>, registries: RegistryAccess): NeoForgeResult {
+        val holderBuf = registries.newBuf()
+        val collected = try {
+            collectEncodableEntries(
+                holders = holders,
+                keyOf = { holder ->
+                    val recipe = holder.value()
+                    val type = recipe.type
+                    if (BuiltInRegistries.RECIPE_TYPE.getKey(type) != null &&
+                        BuiltInRegistries.RECIPE_SERIALIZER.getKey(recipe.serializer) != null
+                    ) {
+                        type
+                    } else {
+                        null
+                    }
+                },
+                unregisteredLabel = { holder ->
+                    val recipe = holder.value()
+                    val serializer = recipe.serializer
+                    val type = recipe.type
+                    val serializerId = BuiltInRegistries.RECIPE_SERIALIZER.getKey(serializer)
+                    val typeId = BuiltInRegistries.RECIPE_TYPE.getKey(type)
+                    when {
+                        serializerId == null -> serializer.toString()
+                        typeId == null -> type.toString()
+                        else -> serializerId.toString()
+                    }
+                },
+                encodeLabel = { holder ->
+                    val serializer = holder.value().serializer
+                    BuiltInRegistries.RECIPE_SERIALIZER.getKey(serializer)?.toString() ?: serializer.toString()
+                },
+                encode = { holder ->
+                    holderBuf.clear()
+                    RecipeHolder.STREAM_CODEC.encode(holderBuf, holder)
+                    holderBuf.copyBytes()
+                },
+            )
+        } finally {
+            holderBuf.release()
         }
 
         val buf = registries.newBuf()
         try {
-            buf.writeVarInt(types.size)
-            for (type in types) {
+            buf.writeVarInt(collected.types.size)
+            for (type in collected.types) {
                 buf.writeVarInt(BuiltInRegistries.RECIPE_TYPE.getId(type))
             }
-            buf.writeVarInt(holders.size)
-            for (holder in holders) {
-                RecipeHolder.STREAM_CODEC.encode(buf, holder)
+            buf.writeVarInt(collected.encodedHolders.size)
+            for (encoded in collected.encodedHolders) {
+                buf.writeBytes(encoded)
             }
-            return Payload(buf.copyBytes(), holders.size, types.size)
+            return NeoForgeResult(
+                payload = Payload(buf.copyBytes(), collected.encodedHolders.size, collected.types.size),
+                skippedSerializers = collected.skippedLabels,
+                skippedRecipes = collected.skippedCount,
+            )
         } finally {
             buf.release()
         }
@@ -299,4 +353,53 @@ class RecipeCache(private val logger: Logger) {
         private val EMPTY = Payload(ByteArray(0), 0, 0)
         private val EMPTY_REI = ReiDisplaySyncEncoder.Result(ByteArray(0), 0, 0, 0, emptySet())
     }
+}
+
+internal class EncodableCollection<K>(
+    val types: Set<K>,
+    val encodedHolders: List<ByteArray>,
+    val skippedLabels: List<String>,
+    val skippedCount: Int,
+)
+
+/**
+ * Filters and pre-encodes entries independently so a single unregistered or unencodable entry
+ * does not poison the remaining batch or leave the output header inconsistent with its body.
+ */
+internal fun <H, K> collectEncodableEntries(
+    holders: Iterable<H>,
+    keyOf: (H) -> K?,
+    unregisteredLabel: (H) -> String,
+    encodeLabel: (H) -> String,
+    encode: (H) -> ByteArray,
+): EncodableCollection<K> {
+    val types = LinkedHashSet<K>()
+    val encodedHolders = ArrayList<ByteArray>()
+    val skipped = LinkedHashSet<String>()
+    var skippedCount = 0
+
+    for (holder in holders) {
+        val key = keyOf(holder)
+        if (key == null) {
+            skipped.add(unregisteredLabel(holder))
+            skippedCount++
+            continue
+        }
+        val bytes = try {
+            encode(holder)
+        } catch (_: Exception) {
+            skipped.add(encodeLabel(holder))
+            skippedCount++
+            continue
+        }
+        types.add(key)
+        encodedHolders.add(bytes)
+    }
+
+    return EncodableCollection(
+        types = types,
+        encodedHolders = encodedHolders,
+        skippedLabels = skipped.toList(),
+        skippedCount = skippedCount,
+    )
 }

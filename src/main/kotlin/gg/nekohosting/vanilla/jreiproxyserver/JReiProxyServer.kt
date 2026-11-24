@@ -140,6 +140,13 @@ class JReiProxyServer : JavaPlugin() {
                 recipeCache.skippedSerializers.joinToString(", "),
             )
         }
+        if (recipeCache.neoForgeSkippedSerializers.isNotEmpty()) {
+            warn(
+                "plugin.skipped-neoforge-serializers",
+                recipeCache.neoForgeSkippedRecipeCount,
+                recipeCache.neoForgeSkippedSerializers.joinToString(", "),
+            )
+        }
         console(
             "plugin.rei-display-payload",
             recipeCache.reiDisplayPayload.displays,
