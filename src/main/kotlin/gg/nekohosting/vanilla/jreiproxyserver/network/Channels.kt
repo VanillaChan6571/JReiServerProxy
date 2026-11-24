@@ -115,4 +115,9 @@ object Channels {
         /** NeoForge's equivalent. */
         const val NEOFORGE_RECIPE_CONTENT = "neoforge:recipe_content"
     }
+
+    /** ViaVersion proxy-to-backend player detail handoff. */
+    object ViaVersion {
+        const val PROXY_DETAILS = "vv:proxy_details"
+    }
 }

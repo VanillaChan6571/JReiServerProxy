@@ -62,6 +62,8 @@ class PlayerResyncCommand(private val plugin: JReiProxyServer) : CommandExecutor
                     result.reiDisplaysSent,
                 )
             )
+        } else if (result.protocolMismatch) {
+            player.sendMessage(plugin.localeManager.component("command.resync.self-version-mismatch"))
         } else {
             player.sendMessage(plugin.localeManager.component("command.resync.self-nothing"))
         }

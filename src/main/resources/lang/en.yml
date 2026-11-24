@@ -12,6 +12,7 @@ command:
     self: "&aRecipes resent: &f{0}&a recipes, &f{1}&a recipe-book entries."
     self-rei: "&aRecipes resent: &f{0}&a loader recipes, &f{2}&a REI displays."
     self-nothing: "&eYour client did not register a recipe viewer the server can send to."
+    self-version-mismatch: "&eYour client version does not match the server, so raw recipe sync was skipped to avoid disconnecting you."
     cooldown: "&ePlease wait {0}s before asking for the recipes again."
     disabled: "&cRecipe sync is disabled on this server."
   info:
@@ -52,6 +53,7 @@ sync:
   sent-recipe-book: "Sent {0} recipe-book entries to {1}."
   sent-rei-displays: "Sent {0} REI displays ({1} KB in {2} frame(s)) to {3}."
   no-channel: "{0} has no recipe channel the server can send on; JEI will show client recipes."
+  skipped-version-mismatch: "Skipped raw recipe payload for {0}: client protocol {1} does not match server protocol {2}."
 
 cheat:
   no-permission: "&cYou do not have permission to use cheat mode."

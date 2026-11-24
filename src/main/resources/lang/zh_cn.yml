@@ -12,6 +12,7 @@ command:
     self: "&a配方已重新发送: &f{0}&a 条配方, &f{1}&a 条配方书条目。"
     self-rei: "&a配方已重新发送: &f{0}&a 条加载器配方, &f{2}&a 条 REI 显示。"
     self-nothing: "&e你的客户端没有注册服务器可发送的配方查看器。"
+    self-version-mismatch: "&e你的客户端版本与服务器不一致，已跳过原始配方同步以避免断线。"
     cooldown: "&e请等待 {0} 秒后再重新请求配方。"
     disabled: "&c本服务器已关闭配方同步。"
   info:
@@ -52,6 +53,7 @@ sync:
   sent-recipe-book: "已向 {1} 发送 {0} 条配方书条目。"
   sent-rei-displays: "已向 {3} 发送 {0} 条 REI 显示 ({1} KB, {2} 个分片)。"
   no-channel: "{0} 没有服务器可用的配方通道; JEI 将显示客户端自带的配方。"
+  skipped-version-mismatch: "已跳过向 {0} 发送原始配方载荷: 客户端协议号 {1} 与服务器协议号 {2} 不一致。"
 
 cheat:
   no-permission: "&c你没有权限使用作弊模式。"
